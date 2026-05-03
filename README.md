@@ -1,4 +1,4 @@
-# 🌍 Jiangcheng Carbon Eye Pro | 江城碳眼 Pro
+# 🌍 Jiangcheng Carbon Eye Pro
 
 *"Making every line of code's carbon footprint visible, manageable, and reducible"*
 
@@ -166,6 +166,17 @@ from core.emission_calculator import calculate_emissions
 result = calculate_emissions(power_consumption=100, duration=3600)
 ```
 
+### Data Persistence
+
+```python
+from core.database import CarbonDatabase
+
+db = CarbonDatabase("carbon_data.db")
+db.save_emission(project_name="Test", file_path="test.py", emissions=0.001)
+```
+
+- `get_trend.py`: Query daily emission trends from SQLite database
+
 ## 🌐 Localization
 
 | Region | Carbon Intensity | Unit |
@@ -183,9 +194,9 @@ Simply use the language selector in the sidebar to switch - all UI elements, cha
 
 ## 📞 Contact & Support
 
-- **Developer**: Liu Zhiming (刘志明)
+- **Developer**: Liu Zhiming
 - **Email**: liuzhiming_2005@qq.com
-- **School**: Wuhan University of Arts and Science (武汉文理学院)
+- **School**: Wuhan University of Arts and Science
 - **Project Background**: Red Bird Challenge Camp Phase 3 - Sustainable Living Direction
 
 ## 📄 License

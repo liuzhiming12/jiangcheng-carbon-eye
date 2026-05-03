@@ -33,8 +33,8 @@ st.markdown("---")
 page = st.sidebar.radio(
     current_locale["sidebar_title"],
     [current_locale["home"],
-    current_locale["monitoring"], 
-    current_locale["analysis"], 
+    current_locale["monitoring"],
+    current_locale["analysis"],
     current_locale["energy_carbon_dashboard"],
     current_locale["ai_insights"],
     current_locale["about"]],
@@ -56,37 +56,36 @@ if page == current_locale["home"]:
     st.header(current_locale["project_intro"])
     st.markdown(f"""
     ### {current_locale["project_desc"]}
-    
+
     ### {current_locale["core_features"]}
     - {current_locale["feature_1"]}
     - {current_locale["feature_2"]}
     - {current_locale["feature_3"]}
     - {current_locale["feature_4"]}
-    
+
     ### {current_locale["tech_stack"]}
     - Python 3.12 + Pandas 2.2.0
     - Streamlit visualization interface
     - CodeCarbon carbon emission monitoring
     - SQLite3 data persistence
     """)
-    
+
     st.markdown("---")
     st.info(current_locale["carbon_intensity"])
 
 elif page == current_locale["monitoring"]:
     st.header(current_locale["real_time_monitoring"])
-    
-    # 优先从数据库加载数据，如果数据库为空则使用模拟数据
+
     from core.database import load_from_database
     db_data = load_from_database()
-    
+
     if not db_data.empty:
         monitoring_data = db_data
-        st.info("📊 显示数据库中的真实数据")
+        st.info("📊 Displaying real data from database")
     else:
         monitoring_data = generate_sample_data()
-        st.info("📊 显示模拟数据（上传数据后将显示真实数据）")
-    
+        st.info("📊 Displaying sample data (real data will show after upload)")
+
     col1, col2, col3 = st.columns(3)
     with col1:
         total_emissions = monitoring_data['emissions'].sum()
@@ -98,7 +97,7 @@ elif page == current_locale["monitoring"]:
         avg_emissions = monitoring_data["emissions"].mean()
         st.metric(current_locale["avg_emissions"],f"{avg_emissions:.4f} kgCO2")
     st.markdown("---")
-    st.subheader(current_locale["emission_trend"]) 
+    st.subheader(current_locale["emission_trend"])
     fig = px.line(monitoring_data, x='timestamp', y='emissions', title=current_locale["emission_trend"])
     st.plotly_chart(fig, width='stretch')
     st.markdown("---")
@@ -109,8 +108,7 @@ elif page == current_locale["analysis"]:
     st.header(current_locale["data_analysis"])
     st.subheader(current_locale["data_import"])
     uploaded_file = st.file_uploader(current_locale["upload_file"], type = ["csv", "xlsx"])
-    
-    # 添加数据模板下载按钮
+
     template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../templates/data_template.xlsx")
     with open(template_path, "rb") as f:
         template_data = f.read()
@@ -120,7 +118,7 @@ elif page == current_locale["analysis"]:
         file_name="data_template.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    
+
     uploaded_data = None
     if uploaded_file is not None:
         if uploaded_file.name.endswith('.csv'):
@@ -128,7 +126,7 @@ elif page == current_locale["analysis"]:
         else:
             uploaded_data = pd.read_excel(uploaded_file)
         st.dataframe(uploaded_data)
-        
+
         if 'power' in uploaded_data.columns and 'duration' in uploaded_data.columns:
             from core.emission_calculator import calculate_emissions
             emissions = []
@@ -143,22 +141,21 @@ elif page == current_locale["analysis"]:
             uploaded_data['energy_consumption'] = energy_consumptions
             uploaded_data['scope'] = scopes
             st.dataframe(uploaded_data)
-            
+
             if st.button(current_locale["save_to_db"]):
                 from core.database import save_to_database
                 save_to_database(uploaded_data)
                 st.success(current_locale["save_success"])
-    
-    # 如果上传了数据且已经计算了 emissions，则使用上传数据；否则使用模拟数据
+
     if uploaded_data is not None and 'emissions' in uploaded_data.columns:
         analysis_data = uploaded_data
     else:
         analysis_data = generate_sample_data()
-    
+
     st.subheader(current_locale["select_dimension"])
     group_by = st.selectbox(
         current_locale["select_dimension"],
-        ["project","file_path","hour","day","week","month","quarter","year"]
+        ["project", "file_path", "hour", "day", "week", "month", "quarter", "year", "scope"]
     )
     result = aggregate_emissions(analysis_data, group_by = group_by)
     st.subheader(current_locale["aggregation_result"])
@@ -177,22 +174,20 @@ elif page == current_locale["analysis"]:
 
 elif page == current_locale["energy_carbon_dashboard"]:
     st.header("⚡ " + current_locale["energy_carbon_dashboard"])
-    
-    # 从数据库加载数据
+
     from core.database import load_from_database
     from core.data_aggregator import aggregate_emissions
     data = load_from_database()
-    
+
     if not data.empty:
-        # 总览指标
         st.subheader(current_locale["overview"])
         col1, col2, col3, col4 = st.columns(4)
-        
+
         total_emissions = data['emissions'].sum()
         total_energy = data['energy_consumption'].sum()
         avg_emissions = data['emissions'].mean()
         avg_energy = data['energy_consumption'].mean()
-        
+
         with col1:
             st.metric(current_locale["total_emissions"], f"{total_emissions:.4f} kgCO2")
         with col2:
@@ -201,53 +196,47 @@ elif page == current_locale["energy_carbon_dashboard"]:
             st.metric(current_locale["avg_emissions"], f"{avg_emissions:.4f} kgCO2")
         with col4:
             st.metric(current_locale["avg_energy_consumption"], f"{avg_energy:.4f} kWh")
-        
-        # 能源消耗与碳排放趋势
+
         st.subheader(current_locale["energy_emission_trend"])
         trend_data = data.copy()
         trend_data['timestamp'] = pd.to_datetime(trend_data['timestamp'])
         trend_data = trend_data.set_index('timestamp')
         trend_data = trend_data.resample('D').sum()
-        
+
         fig = px.line(trend_data, y=['energy_consumption', 'emissions'], title=current_locale["energy_emission_trend"])
         fig.update_layout(yaxis_title="Value")
         st.plotly_chart(fig, width='stretch')
-        
-        # 范围分类占比
+
         st.subheader(current_locale["scope_classification"])
         scope_data = aggregate_emissions(data, group_by="scope")
-        
-        # 范围映射
+
         scope_map = {
             1: current_locale["scope1"],
             2: current_locale["scope2"],
             3: current_locale["scope3"]
         }
-        
-        # 饼图数据
+
         pie_data = scope_data.copy()
         pie_data['scope_name'] = pie_data['scope'].map(scope_map)
-        
+
         fig = px.bar(pie_data, x='scope_name', y=['total_emissions', 'total_energy'], title=current_locale["scope_classification"])
         st.plotly_chart(fig, width='stretch')
-        
-        # 详细数据
+
         st.subheader(current_locale["detailed_data"])
         st.dataframe(data)
-        
+
     else:
         st.warning(current_locale["upload_data_first"])
 
 elif page == current_locale["ai_insights"]:
     st.header("🤖 " + current_locale["ai_insights"])
-    
-    # 从数据库加载数据
+
     from core.database import load_from_database
     data = load_from_database()
-    
+
     if not data.empty:
         project_name = st.text_input(current_locale["project_name"], "Default Project")
-        
+
         if st.button(current_locale["generate_esg_report"]):
             with st.spinner(current_locale["generating_report"]):
                 from core.ai_insights import generate_esg_insights

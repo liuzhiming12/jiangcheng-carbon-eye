@@ -179,7 +179,7 @@ def generate_reduction_suggestions(data: pd.DataFrame, language: str = "zh") -> 
 
 ### Specific Reduction Suggestions
 
-#### 1. Code-level Optimization
+#### 1. Runtime-level Optimization
 - Use efficient algorithms and data structures to reduce computational complexity
 - Avoid unnecessary loops and recursive calls
 - Use NumPy/Pandas vectorization instead of Python loops

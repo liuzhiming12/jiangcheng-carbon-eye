@@ -102,7 +102,7 @@ jiangcheng_carbon_eye/
 
 ### Business Pain Points Solved
 
-1. **Data Gap**: Local developers and SMEs in Wuhan lack awareness of code-level carbon emissions
+1. **Data Gap**: Local developers and SMEs in Wuhan lack awareness of runtime-level carbon emissions
 2. **Tool Deficiency**: Market lacks lightweight monitoring tools adapted to Hubei grid carbon intensity
 3. **Reporting Difficulty**: IT department energy consumption data in corporate ESG reports is often blank, requiring manual estimation
 
@@ -196,7 +196,7 @@ Simply use the language selector in the sidebar to switch - all UI elements, cha
 
 - **Developer**: Liu Zhiming
 - **Email**: liuzhiming_2005@qq.com
-- **School**: Wuhan University of Arts and Science
+- **School**: Wuhan College of Arts and Sciences
 - **Project Background**: Red Bird Challenge Camp Phase 3 - Sustainable Living Direction
 
 ## 📄 License

@@ -115,7 +115,7 @@ locales = {
         "background_desc": "Local developers and SMEs in Wuhan pay little attention to carbon emissions from code execution. When companies prepare ESG reports, IT department energy consumption data is often blank. There is a lack of lightweight monitoring tools adapted to Hubei's local grid carbon intensity.",
         "contact": "Contact",
         "email": "Email: ",
-        "footer": "© 2026 Jiangcheng Carbon Eye Pro | Wuhan University of Arts and Science | Hubei grid carbon intensity: 0.562 kgCO₂/kWh",
+        "footer": "© 2026 Jiangcheng Carbon Eye Pro | Wuhan College of Arts and Sciences | Hubei grid carbon intensity: 0.562 kgCO₂/kWh",
         "language": "Language",
         "english": "English",
         "chinese": "简体中文",

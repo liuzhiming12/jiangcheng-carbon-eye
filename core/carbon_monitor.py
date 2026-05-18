@@ -13,6 +13,8 @@ except ImportError:
     except ImportError:
         psutil_available = False
 
+from .emission_calculator import calculate_emissions
+
 def monitor_emissions(code_to_run, project_name: str, file_path : str, scope: int = 2) -> pd.DataFrame:
     """
     Monitor carbon emissions during code execution
@@ -27,6 +29,8 @@ def monitor_emissions(code_to_run, project_name: str, file_path : str, scope: in
     pd.DataFrame - Emission data with timestamp, project, file_path, duration, energy_consumption, emissions, scope
     """
     start_time = time.time()
+    power_consumption = 0
+    
     if codecarbon_available:
         tracker = EmissionsTracker(project_name = project_name, output_dir = '.', output_file = 'emissions.csv')
         tracker.start()
@@ -50,23 +54,38 @@ def monitor_emissions(code_to_run, project_name: str, file_path : str, scope: in
         code_to_run()
         end_cpu = process.cpu_percent(interval = 0.1)
         avg_cpu = (start_cpu + end_cpu) / 2
-        power_consumption = avg_cpu * 0.1 
+        # psutil fallback: estimate power from CPU utilization + TDP
+        # Assume CPU TDP = 65W, idle = 10W, linear scaling
+        tdp_watts = 65
+        idle_watts = 10
+        power_consumption = idle_watts + (tdp_watts - idle_watts) * (avg_cpu / 100)
         emissions = power_consumption * (time.time() - start_time) * 0.562 / (3600 * 1000)
     else:
+        # TDP-based estimation as ultimate fallback (no psutil available)
+        import platform
+        import psutil
+        cpu_count = os.cpu_count() or 4
+        tdp_watts = 65 * cpu_count
+        
+        # Measure actual execution time first, then estimate emissions
+        start_time = time.time()
         code_to_run()
-        emissions = 0
+        duration = time.time() - start_time
+        
+        result = calculate_emissions(power_consumption=tdp_watts, duration=duration)
+        emissions = result['emissions']
+        power_consumption = tdp_watts
+    
     duration = time.time() - start_time
     # Calculate energy consumption (kWh)
     # For codecarbon, we'll estimate based on emissions and carbon intensity
-    # For psutil, we already have power consumption
+    # For psutil and TDP fallback, we have power consumption
     if codecarbon_available:
         # Estimate energy consumption from emissions
         energy_consumption = emissions / 0.562 if emissions > 0 else 0
-    elif psutil_available:
+    else:
         # Calculate energy consumption from power and duration
         energy_consumption = power_consumption * duration / (1000 * 3600)
-    else:
-        energy_consumption = 0
     
     result = pd.DataFrame({
         'timestamp': [pd.Timestamp.now()],

@@ -9,7 +9,7 @@ A lightweight carbon emission monitoring platform for code efficiency diagnosis,
 | Feature | Description | Technical Implementation |
 |:---|:---|:---|
 | 🔍 **Real-time Carbon Tracking** | Monitor real-time energy consumption and carbon emissions during code execution | CodeCarbon + Psutil real-time monitoring |
-| 📊 **Multi-dimensional Aggregation** | Support project, file, time and other dimensions for data drilling | Pandas flexible aggregation, Plotly visualization |
+| 📊 **Multi-dimensional Aggregation** | Support project, file, time and other dimensions for data drilling | 9 dimensions: project, file, hour, day, week, month, quarter, year, scope |
 | ⚡ **Energy & Carbon Dashboard** | Integrated energy consumption and carbon emission dual analysis | Streamlit responsive dashboard |
 | 🌐 **Scope Classification** | Clearly display Scope 1/2/3 emission classification and proportions | Compliant with international carbon accounting standards |
 | 🤖 **AI-Powered Insights** | Auto-generate ESG analysis reports and emission reduction suggestions | Tongyi Qianwen API integration |
@@ -169,10 +169,25 @@ result = calculate_emissions(power_consumption=100, duration=3600)
 ### Data Persistence
 
 ```python
-from core.database import CarbonDatabase
+from core.database import save_to_database, load_from_database
+import pandas as pd
 
-db = CarbonDatabase("carbon_data.db")
-db.save_emission(project_name="Test", file_path="test.py", emissions=0.001)
+# Prepare emission data
+data = pd.DataFrame({
+    'timestamp': ['2026-05-15 10:00:00'],
+    'project': ['Test'],
+    'file_path': ['test.py'],
+    'duration': [10.0],
+    'energy_consumption': [0.001],
+    'emissions': [0.001],
+    'scope': [2]
+})
+
+# Save to database
+save_to_database(data)
+
+# Load from database
+all_data = load_from_database()
 ```
 
 - `get_trend.py`: Query daily emission trends from SQLite database

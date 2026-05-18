@@ -1,6 +1,18 @@
 import pandas as pd
 import dashscope
 import os
+import re
+
+def validate_report(report: str, data_points: dict) -> str:
+    """Check that all numbers in report exist in raw data"""
+    numbers = re.findall(r'\d+\.\d+', report)
+    valid_numbers = set(str(v) for v in data_points.values())
+    
+    for num in numbers:
+        if num not in valid_numbers:
+            report = report.replace(num, "[Data not verified]")
+    
+    return report
 
 def generate_esg_insights(data: pd.DataFrame, project_name: str = "Unknown", language: str = "zh") -> str:
     """Generate ESG insights using Tongyi Qianwen API"""
@@ -81,6 +93,8 @@ Through continuous monitoring and optimization, a 20-30% reduction in code execu
 4. 长期优化策略
 5. 结论和下一步行动建议
 
+CRITICAL CONSTRAINT: 你只能使用上面提供的数值数据。不得发明、估算或推断任何未明确给出的数字。如果数据不足以支持某个主张，请注明"数据不足"。
+
 报告应该专业、详细、有针对性，符合企业 ESG 报告的标准。
     """,
         "en": f"""
@@ -99,8 +113,17 @@ Please include:
 4. Long-term Optimization Strategies
 5. Conclusions and Next Steps
 
+CRITICAL CONSTRAINT: You must ONLY use the numerical data provided above. Do not invent, estimate, or extrapolate any numbers not explicitly given. If data is insufficient for a claim, state "Data insufficient" instead.
+
 The report should be professional, detailed, targeted, and meet corporate ESG reporting standards.
     """
+    }
+
+    data_points = {
+        'total_emissions': f"{total_emissions:.4f}",
+        'avg_emissions': f"{avg_emissions:.4f}",
+        'max_emission': f"{max_emission:.4f}",
+        'data_count': str(data_count)
     }
 
     if not api_key:
@@ -117,7 +140,8 @@ The report should be professional, detailed, targeted, and meet corporate ESG re
             temperature=0.7,
             max_tokens=1000
         )
-        return response.output.text
+        report = response.output.text
+        return validate_report(report, data_points)
     except Exception as e:
         return templates.get(language, templates["zh"])
 
@@ -218,6 +242,8 @@ Through comprehensive implementation of the above measures, an estimated **20-40
 平均排放量：{avg_emissions:.4f} kgCO2
 
 请从代码优化、资源调度、硬件选择、能源结构、持续监测等5个方面给出具体建议。
+
+CRITICAL CONSTRAINT: 你只能使用上面提供的数值数据。不得发明、估算或推断任何未明确给出的数字。如果数据不足以支持某个主张，请注明"数据不足"。
         """,
         "en": f"""
 You are a carbon emission optimization expert. Please generate specific reduction suggestions based on the following data:
@@ -227,7 +253,15 @@ Total Emissions: {total_emissions:.4f} kgCO2
 Average Emissions: {avg_emissions:.4f} kgCO2
 
 Please provide suggestions from 5 aspects: code optimization, resource scheduling, hardware selection, energy structure, and continuous monitoring.
+
+CRITICAL CONSTRAINT: You must ONLY use the numerical data provided above. Do not invent, estimate, or extrapolate any numbers not explicitly given. If data is insufficient for a claim, state "Data insufficient" instead.
         """
+    }
+
+    data_points = {
+        'total_emissions': f"{total_emissions:.4f}",
+        'avg_emissions': f"{avg_emissions:.4f}",
+        'data_count': str(data_count)
     }
 
     if not api_key:
@@ -244,6 +278,7 @@ Please provide suggestions from 5 aspects: code optimization, resource schedulin
             temperature=0.7,
             max_tokens=1000
         )
-        return response.output.text
+        report = response.output.text
+        return validate_report(report, data_points)
     except Exception as e:
         return templates.get(language, templates["zh"])

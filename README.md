@@ -14,8 +14,8 @@ Principles, I decided to rebuild my learning by building something real.
 - Monitors real-time CPU/memory usage via `psutil`
 - Estimates power consumption using a TDP-based heuristic when CodeCarbon fails 
   (offline/restricted VM)
-- Calculates CO₂ emissions using **Hubei Grid OM factor 0.562 kgCO₂/kWh** 
-  (2022 provincial bulletin)
+- Calculates CO₂ emissions using **Hubei provincial grid factor 0.4364 kgCO₂/kWh** 
+  (MEE 2022 bulletin, released Dec 2024)
 - Stores time-series data in SQLite
 - Visualizes trends via Streamlit
 
@@ -24,23 +24,23 @@ Principles, I decided to rebuild my learning by building something real.
 The core engineering decision: when CodeCarbon fails, degrade gracefully rather 
 than crash.
 
-1. **CodeCarbon** — most accurate, requires network access
-2. **psutil + TDP heuristic** — works everywhere, ~±15% variance (conservative 
+1. **CodeCarbon** �?most accurate, requires network access
+2. **psutil + TDP heuristic** �?works everywhere, ~±15% variance (conservative 
    estimate from community benchmarks, not a statistical bound)
-3. **Constant TDP estimate** — worst case, guaranteed output
+3. **Constant TDP estimate** �?worst case, guaranteed output
 
 ## How the Heuristic Works
 
 ```
 power_estimate = tdp_watts * (cpu_utilization_percent / 100)
 energy_kwh = power_estimate * time_hours / 1000
-co2_kg = energy_kwh * 0.562
+co2_kg = energy_kwh * 0.4364
 ```
 
 - `cpu_utilization_percent` comes from `psutil.cpu_percent(interval=1)`
 - `tdp_watts` is read from a user-configurable lookup table (default 15W for my laptop)
-- `0.562` is the Hubei Grid Operating Margin factor (kgCO₂/kWh), replacing the 
-  national default 0.5556 because Hubei has a higher hydro share
+- `0.4364` is the Hubei Grid Operating Margin factor (kgCO�?kWh), replacing the 
+  CodeCarbon default global average 0.475 because Hubei has a higher hydro share
 
 ## Tech Stack
 
@@ -58,15 +58,15 @@ streamlit run ui/app.py
 ## Current Limitations
 
 - Application-layer estimation only; TDP model is a heuristic with unverified variance
-- No kernel-level instrumentation (RAPL/eBPF) yet — reading docs, planning integration with lab access
+- No kernel-level instrumentation (RAPL/eBPF) yet �?reading docs, planning integration with lab access
 - Tested on single Windows laptop; cross-platform validation pending
 - AI insights use Tongyi Qianwen API with factual constraints (forced raw-data citation)
 
 ## What I'm Learning Next
 
-- CMU 15-445 lectures on storage and indexing (lectures 1–5 completed, applying to my SQLite schema)
+- CMU 15-445 lectures on storage and indexing (lectures 1�? completed, applying to my SQLite schema)
 - Intel RAPL documentation (hardware-level power counters)
-- Kepler eBPF framework (process-level energy attribution) — reading README and blog posts
+- Kepler eBPF framework (process-level energy attribution) �?reading README and blog posts
 
 ## License
 

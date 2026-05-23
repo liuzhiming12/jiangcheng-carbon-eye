@@ -1,33 +1,32 @@
-# Jiangcheng Carbon Eye
+# Jiangcheng Carbon Eye Pro
 
-A lightweight carbon emission monitoring tool for code-level energy attribution,
-built for developers and small IT teams in Wuhan, China.
+A lightweight, locally-calibrated carbon monitoring tool for developers.
+Measures CO₂ emissions from Python processes using Hubei provincial grid factors.
 
 ## Why I Built This
 
-At Wuhan College of Arts and Sciences, campus IT departments had no way to 
-measure the carbon footprint of running software. After scoring 53 in Database 
-Principles, I decided to rebuild my learning by building something real.
+Developers treat AI assistants as free labor. No one measures the electricity bill.
+
+I couldn't find a lightweight tool that:
+- Uses **Hubei-specific carbon factors** (not global averages)
+- Works offline in restricted campus VMs
+- Degrades gracefully when external APIs fail
+- Shows emissions in real-time during development
 
 ## What It Does
 
-- Monitors real-time CPU/memory usage via `psutil`
-- Estimates power consumption using a TDP-based heuristic when CodeCarbon fails 
-  (offline/restricted VM)
-- Calculates CO₡�emissions using **Hubei provincial grid factor 0.4364 kgCO₡�kWh** 
-  (MEE 2022 bulletin, released Dec 2024)
-- Stores time-series data in SQLite
-- Visualizes trends via Streamlit
+- Monitors CPU usage and estimates power consumption
+- Calculates CO₂ emissions using **Hubei provincial grid factor 0.4364 kgCO₂/kWh** (MEE 2022 bulletin)
+- Provides real-time dashboard with process-level breakdown
+- Exports reports in ESG disclosure format
 
 ## 3-Tier Fallback
 
-The core engineering decision: when CodeCarbon fails, degrade gracefully rather 
-than crash.
+The core engineering decision: when CodeCarbon fails, degrade gracefully rather than crash.
 
-1. **CodeCarbon** ￡�most accurate, requires network access
-2. **psutil + TDP heuristic** ￡�works everywhere, ~±15% variance (conservative 
-   estimate from community benchmarks, not a statistical bound)
-3. **Constant TDP estimate** ￡�worst case, guaranteed output
+1. **CodeCarbon** → most accurate, requires network access
+2. **psutil + TDP heuristic** → works everywhere, ~±15% variance (conservative estimate)
+3. **Constant TDP estimate** → worst case, guaranteed output
 
 ## How the Heuristic Works
 
@@ -38,36 +37,30 @@ co2_kg = energy_kwh * 0.4364
 ```
 
 - `cpu_utilization_percent` comes from `psutil.cpu_percent(interval=1)`
-- `tdp_watts` is read from a user-configurable lookup table (default 15W for my laptop)
-- `0.4364` is the Hubei provincial grid emission factor (kgCO₡�kWh), from the 
-  Ministry of Ecology and Environment 2022 bulletin (released Dec 2024). 
-  Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share
+- `tdp_watts` is read from a user-configurable lookup table (default 15W for laptops)
+- `0.4364` is the Hubei provincial grid emission factor (kgCO₂/kWh), from the Ministry of Ecology and Environment 2022 bulletin (released Dec 2024). Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share.
 
 ## Tech Stack
 
-Python 3.12, Streamlit, SQLite, psutil, Pandas, Plotly
-
-## Run Locally
-
-```bash
-git clone https://github.com/liuzhiming12/jiangcheng-carbon-eye.git
-cd jiangcheng-carbon-eye
-pip install -r requirements.txt
-streamlit run ui/app.py
-```
+- Python 3.12 + Streamlit for the dashboard
+- psutil for system metrics
+- CodeCarbon as primary emission calculator
+- SQLite for data persistence
+- Plotly for visualizations
 
 ## Current Limitations
 
+- Static carbon factor (0.4364); synthetic data used for validation; no real-world campus deployment yet
 - Application-layer estimation only; TDP model is a heuristic with unverified variance
-- No kernel-level instrumentation (RAPL/eBPF) yet ￡�reading docs, planning integration with lab access
+- No kernel-level instrumentation (RAPL/eBPF) yet — reading docs, planning integration with lab access
 - Tested on single Windows laptop; cross-platform validation pending
 - AI insights use Tongyi Qianwen API with factual constraints (forced raw-data citation)
 
 ## What I'm Learning Next
 
-- CMU 15-445 lectures on storage and indexing (lectures 1￡� completed, applying to my SQLite schema)
+- CMU 15-445 lectures on storage and indexing (lectures 1-5 completed, applying to my SQLite schema)
 - Intel RAPL documentation (hardware-level power counters)
-- Kepler eBPF framework (process-level energy attribution) ￡�reading README and blog posts
+- Kepler eBPF framework (process-level energy attribution) — reading README and blog posts
 
 ## License
 

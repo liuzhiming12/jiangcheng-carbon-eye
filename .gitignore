@@ -65,7 +65,7 @@ db.sqlite3-journal
 instance/
 .webassets-cache
 
-# Scrapy stuff:
+# Scrapy stuff
 .scrapy
 
 # Sphinx documentation
@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Project-specific ignores
+*.db
+*.xlsx
+!templates/data_template.xlsx
+test_data.*

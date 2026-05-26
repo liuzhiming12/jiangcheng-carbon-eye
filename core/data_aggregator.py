@@ -38,8 +38,6 @@ def aggregate_emissions(data: pd.DataFrame, group_by: str = "project") -> pd.Dat
     elif group_by == "year":
         df["time_group"] = df["timestamp"].dt.to_period('Y').astype(str)
         group_key = "time_group"
-    elif group_by == "scope":
-        group_key = "scope"
     else:
         print(f"Unsupported aggregation dimension: {group_by}")
     

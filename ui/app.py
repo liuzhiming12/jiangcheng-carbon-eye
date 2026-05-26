@@ -155,7 +155,7 @@ elif page == current_locale["analysis"]:
     st.subheader(current_locale["select_dimension"])
     group_by = st.selectbox(
         current_locale["select_dimension"],
-        ["project", "file_path", "hour", "day", "week", "month", "quarter", "year", "scope"]
+        ["project", "file_path", "hour", "day", "week", "month", "quarter", "year"]
     )
     result = aggregate_emissions(analysis_data, group_by = group_by)
     st.subheader(current_locale["aggregation_result"])
@@ -173,7 +173,7 @@ elif page == current_locale["analysis"]:
     st.download_button(label = current_locale["download_csv"], data = csv_data, file_name = f"emissions_by_{group_by}.csv", mime = "text/csv")
 
 elif page == current_locale["energy_carbon_dashboard"]:
-    st.header("�?" + current_locale["energy_carbon_dashboard"])
+    st.header("⚡ " + current_locale["energy_carbon_dashboard"])
 
     from core.database import load_from_database
     from core.data_aggregator import aggregate_emissions
@@ -207,19 +207,21 @@ elif page == current_locale["energy_carbon_dashboard"]:
         fig.update_layout(yaxis_title="Value")
         st.plotly_chart(fig, width='stretch')
 
-        st.subheader(current_locale["scope_classification"])
-        scope_data = aggregate_emissions(data, group_by="scope")
+        st.subheader(current_locale["project_comparison"])
+        project_data = aggregate_emissions(data, group_by="project")
+        
+        fig = px.pie(project_data, values='total_emissions', names='project', 
+                     title=current_locale["project_comparison"],
+                     hole=0.3)
+        st.plotly_chart(fig, width='stretch')
 
-        scope_map = {
-            1: current_locale["scope1"],
-            2: current_locale["scope2"],
-            3: current_locale["scope3"]
-        }
-
-        pie_data = scope_data.copy()
-        pie_data['scope_name'] = pie_data['scope'].map(scope_map)
-
-        fig = px.bar(pie_data, x='scope_name', y=['total_emissions', 'total_energy'], title=current_locale["scope_classification"])
+        st.subheader(current_locale["file_comparison"])
+        file_data = aggregate_emissions(data, group_by="file_path")
+        
+        fig = px.bar(file_data, x='file_path', y='total_emissions', 
+                     title=current_locale["file_comparison"],
+                     color='total_emissions', color_continuous_scale='Viridis')
+        fig.update_layout(xaxis_tickangle=-45)
         st.plotly_chart(fig, width='stretch')
 
         st.subheader(current_locale["detailed_data"])

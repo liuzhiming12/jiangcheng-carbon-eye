@@ -65,10 +65,8 @@ locales = {
         "energy_consumption": "总能源消耗",
         "avg_energy_consumption": "平均能源消耗",
         "energy_emission_trend": "📈 能源消耗与碳排放趋势",
-        "scope_classification": "🔍 排放范围分类",
-        "scope1": "范围1（直接排放）",
-        "scope2": "范围2（间接排放）",
-        "scope3": "范围3（其他间接排放）"
+        "project_comparison": "📊 项目碳排放占比",
+        "file_comparison": "📁 文件碳排放对比"
     },
     "en":{
         "app_title": "🌍 Jiangcheng Carbon Eye Pro - Wuhan University Carbon Emission Monitoring Platform",
@@ -136,9 +134,7 @@ locales = {
         "energy_consumption": "Total Energy Consumption",
         "avg_energy_consumption": "Average Energy Consumption",
         "energy_emission_trend": "📈 Energy & Emission Trend",
-        "scope_classification": "🔍 Scope Classification",
-        "scope1": "Scope 1 (Direct Emissions)",
-        "scope2": "Scope 2 (Indirect Emissions)",
-        "scope3": "Scope 3 (Other Indirect Emissions)"
+        "project_comparison": "📊 Project Emission Distribution",
+        "file_comparison": "📁 File Emission Comparison"
     }
 }

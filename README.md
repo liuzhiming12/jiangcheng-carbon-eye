@@ -56,6 +56,14 @@ co2_kg = energy_kwh * 0.4364
 - Tested on single Windows laptop; cross-platform validation pending
 - AI insights use Tongyi Qianwen API with factual constraints (forced raw-data citation)
 
+## Recent Updates
+
+- **May 2026**: Refined dashboard visualization with project/file-level carbon breakdown
+- **May 2026**: Improved error handling for API failures with graceful degradation
+- **May 2026**: Updated aggregation logic to focus on Scope 2 emissions (code-level monitoring)
+- **May 2026**: Added unit tests for carbon estimation calculations
+- **Apr 2026**: Implemented 3-tier fallback system for offline VM environments
+
 ## What I'm Learning Next
 
 - CMU 15-445 lectures on storage and indexing (lectures 1-5 completed, applying to my SQLite schema)

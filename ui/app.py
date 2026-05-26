@@ -173,7 +173,7 @@ elif page == current_locale["analysis"]:
     st.download_button(label = current_locale["download_csv"], data = csv_data, file_name = f"emissions_by_{group_by}.csv", mime = "text/csv")
 
 elif page == current_locale["energy_carbon_dashboard"]:
-    st.header("âš?" + current_locale["energy_carbon_dashboard"])
+    st.header("ï¿½?" + current_locale["energy_carbon_dashboard"])
 
     from core.database import load_from_database
     from core.data_aggregator import aggregate_emissions

@@ -1,7 +1,6 @@
+streamlit==1.30.0
 pandas==2.2.0
-streamlit
-codecarbon
-psutil
-plotly
-openpyxl
-requests
+plotly==5.18.0
+psutil==5.9.8
+dashscope>=1.14.0
+requests>=2.31.0

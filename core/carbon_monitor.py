@@ -62,15 +62,13 @@ def monitor_emissions(code_to_run, project_name: str, file_path : str, scope: in
         emissions = power_consumption * (time.time() - start_time) * 0.4364 / (3600 * 1000)
     else:
         # TDP-based estimation as ultimate fallback (no psutil available)
-        import platform
-        import psutil
         cpu_count = os.cpu_count() or 4
         tdp_watts = 65 * cpu_count
         
         # Measure actual execution time first, then estimate emissions
-        start_time = time.time()
+        execution_start = time.time()
         code_to_run()
-        duration = time.time() - start_time
+        duration = time.time() - execution_start
         
         result = calculate_emissions(power_consumption=tdp_watts, duration=duration)
         emissions = result['emissions']

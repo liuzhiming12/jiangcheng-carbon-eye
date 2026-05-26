@@ -1,7 +1,7 @@
 # Jiangcheng Carbon Eye Pro
 
 A lightweight, locally-calibrated carbon monitoring tool for developers.
-Measures CO₂ emissions from Python processes using Hubei provincial grid factors.
+Measures CO₂ emissions from Python processes using Hubei provincial emission factors.
 
 ## Why I Built This
 
@@ -16,7 +16,7 @@ I couldn't find a lightweight tool that:
 ## What It Does
 
 - Monitors CPU usage and estimates power consumption
-- Calculates CO₂ emissions using **Hubei provincial grid factor 0.4364 kgCO₂/kWh** (MEE 2022 bulletin)
+- Calculates CO₂ emissions using **Hubei provincial emission factor 0.4364 kgCO₂/kWh** (MEE 2022 bulletin)
 - Provides real-time dashboard with process-level breakdown
 - Exports reports in ESG disclosure format
 
@@ -65,3 +65,7 @@ co2_kg = energy_kwh * 0.4364
 ## License
 
 MIT
+
+## Related Project
+
+- **`https://github.com/liuzhiming12/wenli-carbon-calc`** — Batch processing layer for institutional ESG reporting. Same carbon engine, different input.

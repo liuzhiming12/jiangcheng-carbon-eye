@@ -18,6 +18,39 @@ st.set_page_config(
     layout = "wide"
 )
 
+# 添加专业配色方案
+st.markdown("""
+<style>
+:root {
+    --primary-color: #22c55e;
+    --secondary-color: #16a34a;
+    --bg-dark: #0f172a;
+    --bg-card: #1e293b;
+}
+
+.stMetric {
+    background: var(--bg-card);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+.stButton>button {
+    background: var(--primary-color);
+    color: white;
+    border-radius: 0.5rem;
+}
+
+h1, h2, h3 {
+    color: #f1f5f9;
+}
+
+.stDataFrame {
+    background: var(--bg-card);
+}
+</style>
+""", unsafe_allow_html=True)
+
 language = st.sidebar.selectbox(
     "Language",
     options = ["zh", "en"],
@@ -99,7 +132,7 @@ elif page == current_locale["monitoring"]:
     st.markdown("---")
     st.subheader(current_locale["emission_trend"])
     fig = px.line(monitoring_data, x='timestamp', y='emissions', title=current_locale["emission_trend"])
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown("---")
     st.subheader(current_locale["monitoring_data"])
     st.dataframe(monitoring_data)
@@ -162,10 +195,10 @@ elif page == current_locale["analysis"]:
     col1, col2 = st.columns(2)
     with col1:
         fig = px.bar(result, x=result.columns[0], y='total_emissions', title=current_locale["total_emissions_compare"])
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
     with col2:
         fig = px.bar(result, x=result.columns[0], y='avg_emissions', title=current_locale["avg_emissions_compare"])
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
     st.markdown("---")
     st.subheader(current_locale["detailed_data"])
     st.dataframe(result)
@@ -205,7 +238,7 @@ elif page == current_locale["energy_carbon_dashboard"]:
 
         fig = px.line(trend_data, y=['energy_consumption', 'emissions'], title=current_locale["energy_emission_trend"])
         fig.update_layout(yaxis_title="Value")
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
 
         st.subheader(current_locale["project_comparison"])
         project_data = aggregate_emissions(data, group_by="project")
@@ -213,7 +246,7 @@ elif page == current_locale["energy_carbon_dashboard"]:
         fig = px.pie(project_data, values='total_emissions', names='project', 
                      title=current_locale["project_comparison"],
                      hole=0.3)
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
 
         st.subheader(current_locale["file_comparison"])
         file_data = aggregate_emissions(data, group_by="file_path")
@@ -222,7 +255,7 @@ elif page == current_locale["energy_carbon_dashboard"]:
                      title=current_locale["file_comparison"],
                      color='total_emissions', color_continuous_scale='Viridis')
         fig.update_layout(xaxis_tickangle=-45)
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
 
         st.subheader(current_locale["detailed_data"])
         st.dataframe(data)

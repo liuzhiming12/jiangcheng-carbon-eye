@@ -15,6 +15,102 @@ except ImportError:
 
 from .emission_calculator import calculate_emissions
 
+
+def compare_strategies(code_to_run, iterations=5):
+    """
+    对比三种监测策略的性能和准确性
+    
+    Args:
+        code_to_run: 要执行的代码函数
+        iterations: 迭代次数
+    
+    Returns:
+        pd.DataFrame: 各策略的平均排放量和标准差
+    """
+    results = []
+    strategies = [
+        ('codecarbon', _monitor_with_codecarbon),
+        ('psutil', _monitor_with_psutil),
+        ('tdp', _monitor_with_tdp)
+    ]
+    
+    for _ in range(iterations):
+        for name, func in strategies:
+            try:
+                result = func(code_to_run, "test", "test.py")
+                results.append({
+                    "strategy": name,
+                    "emissions": result['emissions']
+                })
+            except Exception as e:
+                print(f"策略 {name} 失败: {e}")
+    
+    if not results:
+        return None
+    
+    df = pd.DataFrame(results)
+    comparison = df.groupby('strategy')['emissions'].agg(['mean', 'std']).reset_index()
+    comparison.columns = ['策略', '平均排放(kgCO2)', '标准差']
+    
+    return comparison
+
+
+def _monitor_with_codecarbon(code_to_run, project_name, file_path):
+    """使用CodeCarbon监测碳排放"""
+    tracker = EmissionsTracker(project_name=project_name, output_dir='.', output_file='emissions.csv')
+    tracker.start()
+    try:
+        code_to_run()
+    finally:
+        tracker.stop()
+    
+    if os.path.exists('emissions.csv'):
+        df = pd.read_csv('emissions.csv')
+        if not df.empty:
+            emissions = df.iloc[-1]['emissions']
+            os.remove('emissions.csv')
+        else:
+            emissions = 0
+    else:
+        emissions = 0
+    
+    return {'emissions': emissions}
+
+
+def _monitor_with_psutil(code_to_run, project_name, file_path):
+    """使用psutil监测碳排放"""
+    import psutil
+    process = psutil.Process()
+    start_time = time.time()
+    
+    start_cpu = process.cpu_percent(interval=0.1)
+    code_to_run()
+    end_cpu = process.cpu_percent(interval=0.1)
+    
+    avg_cpu = (start_cpu + end_cpu) / 2
+    tdp_watts = 65
+    idle_watts = 10
+    power_consumption = idle_watts + (tdp_watts - idle_watts) * (avg_cpu / 100)
+    
+    duration = time.time() - start_time
+    emissions = power_consumption * duration * 0.4044 / (3600 * 1000)
+    
+    return {'emissions': emissions}
+
+
+def _monitor_with_tdp(code_to_run, project_name, file_path):
+    """使用TDP估算碳排放"""
+    cpu_count = os.cpu_count() or 4
+    tdp_watts = 65 * cpu_count
+    
+    start_time = time.time()
+    code_to_run()
+    duration = time.time() - start_time
+    
+    result = calculate_emissions(power_consumption=tdp_watts, duration=duration)
+    
+    return {'emissions': result['emissions']}
+
 def monitor_emissions(code_to_run, project_name: str, file_path : str, scope: int = 2) -> pd.DataFrame:
     """
     Monitor carbon emissions during code execution

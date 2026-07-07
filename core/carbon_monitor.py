@@ -93,7 +93,7 @@ def _monitor_with_psutil(code_to_run, project_name, file_path):
     power_consumption = idle_watts + (tdp_watts - idle_watts) * (avg_cpu / 100)
     
     duration = time.time() - start_time
-    emissions = power_consumption * duration * 0.4044 / (3600 * 1000)
+    emissions = power_consumption * duration * 0.4364 / (3600 * 1000)
     
     return {'emissions': emissions}
 
@@ -155,7 +155,7 @@ def monitor_emissions(code_to_run, project_name: str, file_path : str, scope: in
         tdp_watts = 65
         idle_watts = 10
         power_consumption = idle_watts + (tdp_watts - idle_watts) * (avg_cpu / 100)
-        emissions = power_consumption * (time.time() - start_time) * 0.4044 / (3600 * 1000)
+        emissions = power_consumption * (time.time() - start_time) * 0.4364 / (3600 * 1000)
     else:
         # TDP-based estimation as ultimate fallback (no psutil available)
         cpu_count = os.cpu_count() or 4
@@ -176,7 +176,7 @@ def monitor_emissions(code_to_run, project_name: str, file_path : str, scope: in
     # For psutil and TDP fallback, we have power consumption
     if codecarbon_available:
         # Estimate energy consumption from emissions
-        energy_consumption = emissions / 0.4044 if emissions > 0 else 0
+        energy_consumption = emissions / 0.4364 if emissions > 0 else 0
     else:
         # Calculate energy consumption from power and duration
         energy_consumption = power_consumption * duration / (1000 * 3600)

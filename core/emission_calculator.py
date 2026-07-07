@@ -1,4 +1,4 @@
-def calculate_emissions(power_consumption: float, duration: float, carbon_intensity: float = 0.4044, scope: int = 2) -> dict:
+def calculate_emissions(power_consumption: float, duration: float, carbon_intensity: float = 0.4364, scope: int = 2) -> dict:
     """
     Calculate carbon emissions from code execution
 

@@ -16,7 +16,7 @@ I couldn't find a lightweight tool that:
 ## What It Does
 
 - Monitors CPU usage and estimates power consumption
-- Calculates CO₂ emissions using **Hubei provincial emission factor 0.4364 kgCO₂/kWh** (MEE 2025 bulletin (2023 regional grid carbon intensity))
+- Calculates CO₂ emissions using **Hubei provincial emission factor 0.4044 kgCO₂/kWh** (MEE 2025 bulletin (2023 regional grid carbon intensity))
 - Provides real-time dashboard with process-level breakdown
 - Exports reports in ESG disclosure format
 
@@ -33,12 +33,12 @@ The core engineering decision: when CodeCarbon fails, degrade gracefully rather 
 ```
 power_estimate = tdp_watts * (cpu_utilization_percent / 100)
 energy_kwh = power_estimate * time_hours / 1000
-co2_kg = energy_kwh * 0.4364
+co2_kg = energy_kwh * 0.4044
 ```
 
 - `cpu_utilization_percent` comes from `psutil.cpu_percent(interval=1)`
 - `tdp_watts` is read from a user-configurable lookup table (default 15W for laptops)
-- `0.4364` is the Hubei provincial grid emission factor (kgCO₂/kWh), from the Ministry of Ecology and Environment 2022 bulletin (released Dec 2024). Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share.
+- `0.4044` is the Hubei provincial grid emission factor (kgCO₂/kWh), from the Ministry of Ecology and Environment 2022 bulletin (released Dec 2024). Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share.
 
 ## Tech Stack
 
@@ -50,7 +50,7 @@ co2_kg = energy_kwh * 0.4364
 
 ## Current Limitations
 
-- Static carbon factor (0.4364); synthetic data used for validation; no real-world campus deployment yet
+- Static carbon factor (0.4044); synthetic data used for validation; no real-world campus deployment yet
 - Application-layer estimation only; TDP model is a heuristic with unverified variance
 - No kernel-level instrumentation (RAPL/eBPF) yet — reading docs, planning integration with lab access
 - Tested on single Windows laptop; cross-platform validation pending

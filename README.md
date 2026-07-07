@@ -38,7 +38,7 @@ co2_kg = energy_kwh * 0.4044
 
 - `cpu_utilization_percent` comes from `psutil.cpu_percent(interval=1)`
 - `tdp_watts` is read from a user-configurable lookup table (default 15W for laptops)
-- `0.4044` is the Hubei provincial grid emission factor (kgCO₂/kWh), from the Ministry of Ecology and Environment 2022 bulletin (released Dec 2024). Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share.
+- `0.4044` is the Hubei provincial grid emission factor (kgCO₂/kWh), from the Ministry of Ecology and Environment 2025 bulletin (2023 regional grid carbon intensity). Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share.
 
 ## Tech Stack
 

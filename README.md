@@ -40,6 +40,46 @@ co2_kg = energy_kwh * 0.4044
 - `tdp_watts` is read from a user-configurable lookup table (default 15W for laptops)
 - `0.4044` is the Hubei provincial grid emission factor (kgCO₂/kWh), from the Ministry of Ecology and Environment 2025 bulletin (2023 regional grid carbon intensity). Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share.
 
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/liuzhiming12/jiangcheng-carbon-eye.git
+cd jiangcheng-carbon-eye
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the app
+streamlit run ui/app.py
+```
+
+Then open your browser and go to `http://localhost:8501`
+
+## How to Use
+
+1. **Go to "数据监测" (Monitoring) page**
+2. **Enter your Python code** in the text area (or use the sample code)
+3. **Click "▶ Start Monitoring"** - The code will run and carbon emissions will be calculated automatically
+4. **View results** - Emissions are saved to database and can be analyzed in other pages
+
+### Example Usage
+
+```python
+# Sample code to monitor
+import time
+import math
+
+result = 0
+for i in range(10000000):
+    result += math.sin(i) * math.cos(i)
+```
+
+After running, you'll see:
+- Total emissions for this run
+- Emission trend over time
+- Comparison across projects/files
+
 ## Tech Stack
 
 - Python 3.12 + Streamlit for the dashboard

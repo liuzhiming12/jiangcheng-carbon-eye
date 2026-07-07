@@ -108,6 +108,30 @@ if page == current_locale["home"]:
 
 elif page == current_locale["monitoring"]:
     st.header(current_locale["real_time_monitoring"])
+    
+    st.subheader("🔧 Run Code Monitoring")
+    project_name = st.text_input("Project Name", "Default Project")
+    file_path = st.text_input("File Path", "main.py")
+    
+    test_code = st.text_area("Enter code to monitor (Python)", """
+import time
+import math
+
+# Sample computation-intensive code
+result = 0
+for i in range(10000000):
+    result += math.sin(i) * math.cos(i)
+""", height=200)
+    
+    if st.button("▶ Start Monitoring"):
+        with st.spinner("Running and monitoring emissions..."):
+            from core.carbon_monitor import monitor_emissions
+            
+            def run_code():
+                exec(test_code)
+            
+            result = monitor_emissions(run_code, project_name, file_path)
+            st.success(f"✅ Monitoring complete! Emissions: {result['emissions'].iloc[0]:.6f} kgCO2")
 
     from core.database import load_from_database
     db_data = load_from_database()
@@ -117,7 +141,7 @@ elif page == current_locale["monitoring"]:
         st.info("📊 Displaying real data from database")
     else:
         monitoring_data = generate_sample_data()
-        st.info("📊 Displaying sample data (real data will show after upload)")
+        st.info("📊 Displaying sample data (run monitoring first to collect real data)")
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -139,51 +163,15 @@ elif page == current_locale["monitoring"]:
 
 elif page == current_locale["analysis"]:
     st.header(current_locale["data_analysis"])
-    st.subheader(current_locale["data_import"])
-    uploaded_file = st.file_uploader(current_locale["upload_file"], type = ["csv", "xlsx"])
-
-    template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../templates/data_template.xlsx")
-    with open(template_path, "rb") as f:
-        template_data = f.read()
-    st.download_button(
-        label=current_locale["download_template"],
-        data=template_data,
-        file_name="data_template.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-
-    uploaded_data = None
-    if uploaded_file is not None:
-        if uploaded_file.name.endswith('.csv'):
-            uploaded_data = pd.read_csv(uploaded_file)
-        else:
-            uploaded_data = pd.read_excel(uploaded_file)
-        st.dataframe(uploaded_data)
-
-        if 'power' in uploaded_data.columns and 'duration' in uploaded_data.columns:
-            from core.emission_calculator import calculate_emissions
-            emissions = []
-            energy_consumptions = []
-            scopes = []
-            for _, row in uploaded_data.iterrows():
-                result = calculate_emissions(row['power'], row['duration'])
-                emissions.append(result['emissions'])
-                energy_consumptions.append(result['energy_consumption'])
-                scopes.append(result['scope'])
-            uploaded_data['emissions'] = emissions
-            uploaded_data['energy_consumption'] = energy_consumptions
-            uploaded_data['scope'] = scopes
-            st.dataframe(uploaded_data)
-
-            if st.button(current_locale["save_to_db"]):
-                from core.database import save_to_database
-                save_to_database(uploaded_data)
-                st.success(current_locale["save_success"])
-
-    if uploaded_data is not None and 'emissions' in uploaded_data.columns:
-        analysis_data = uploaded_data
+    
+    from core.database import load_from_database
+    data = load_from_database()
+    
+    if not data.empty:
+        analysis_data = data
     else:
         analysis_data = generate_sample_data()
+        st.info("📊 Displaying sample data (run monitoring first to collect real data)")
 
     st.subheader(current_locale["select_dimension"])
     group_by = st.selectbox(

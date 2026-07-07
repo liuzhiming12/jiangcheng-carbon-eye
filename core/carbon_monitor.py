@@ -14,6 +14,7 @@ except ImportError:
         psutil_available = False
 
 from .emission_calculator import calculate_emissions
+from .database import save_to_database
 
 
 def compare_strategies(code_to_run, iterations=5):
@@ -190,4 +191,7 @@ def monitor_emissions(code_to_run, project_name: str, file_path : str, scope: in
         'emissions': [emissions],
         'scope': [scope]
     })
+    
+    save_to_database(result)
+    
     return result

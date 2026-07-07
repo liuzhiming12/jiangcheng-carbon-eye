@@ -16,7 +16,7 @@ I couldn't find a lightweight tool that:
 ## What It Does
 
 - Monitors CPU usage and estimates power consumption
-- Calculates CO₂ emissions using **Hubei provincial emission factor 0.4364 kgCO₂/kWh** (MEE 2022 bulletin)
+- Calculates CO₂ emissions using **Hubei provincial emission factor 0.4364 kgCO₂/kWh** (MEE 2025 bulletin (2023 regional grid carbon intensity))
 - Provides real-time dashboard with process-level breakdown
 - Exports reports in ESG disclosure format
 

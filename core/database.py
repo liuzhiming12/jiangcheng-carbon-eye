@@ -1,6 +1,26 @@
 import sqlite3
 import pandas as pd
 
+
+def sanitize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert PyArrow-backed columns to standard types for Streamlit compatibility.
+
+    Streamlit's Arrow serialization does not recognize PyArrow dtypes like
+    ``LargeUtf8``. This function converts all Arrow-backed and extension
+    dtypes to plain numpy/object types.
+    """
+    df = df.copy()
+    for col in df.columns:
+        dtype = df[col].dtype
+        # Check for PyArrow / extension types (pandas 3.0 uses Arrow by default)
+        if (
+            isinstance(dtype, pd.ArrowDtype)
+            or hasattr(dtype, 'pyarrow_dtype')
+            or 'arrow' in str(dtype).lower()
+        ):
+            df[col] = df[col].astype(object)
+    return df
+
 def init_database(db_path: str = "carbon_data.db"):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()

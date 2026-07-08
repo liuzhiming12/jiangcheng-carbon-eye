@@ -38,8 +38,5 @@ def aggregate_emissions(data: pd.DataFrame, group_by: str = "project") -> pd.Dat
     else:
         result.columns = [group_key, 'total_emissions', 'avg_emissions']
     
-    for col in result.columns:
-        if str(result[col].dtype).startswith('Large') or str(result[col].dtype) == 'string':
-            result[col] = result[col].astype(object)
-    
-    return result
+    from .database import sanitize_dataframe
+    return sanitize_dataframe(result)

@@ -29,7 +29,7 @@ except ImportError:
     except ImportError:
         psutil_available = False
 
-from .database import save_to_database
+from .database import save_to_database, sanitize_dataframe
 
 
 # ── Public API ──────────────────────────────────────────────────────
@@ -121,7 +121,7 @@ def monitor_emissions(code_to_run, project_name: str, file_path: str, scope: int
     })
 
     save_to_database(result)
-    return result
+    return sanitize_dataframe(result)
 
 
 def monitor_file(file_path: str, project_name: str = None) -> pd.DataFrame:

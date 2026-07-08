@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.carbon_monitor import monitor_emissions, monitor_file, monitor_folder
 from core.data_aggregator import aggregate_emissions
-from core.database import save_to_database, load_from_database
+from core.database import save_to_database, load_from_database, sanitize_dataframe
 from ui.locales import locales
 
 st.set_page_config(
@@ -54,7 +54,7 @@ def _get_data() -> pd.DataFrame:
     data = load_from_database()
     if data.empty:
         return _generate_sample_data()
-    return data
+    return sanitize_dataframe(data)
 
 
 def _generate_sample_data() -> pd.DataFrame:

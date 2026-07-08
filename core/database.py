@@ -1,5 +1,6 @@
 import sqlite3
 import pandas as pd
+pd.options.future.infer_string = False
 
 
 def sanitize_dataframe(df: pd.DataFrame) -> pd.DataFrame:

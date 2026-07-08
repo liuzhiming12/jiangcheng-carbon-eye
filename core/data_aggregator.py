@@ -1,4 +1,7 @@
 import pandas as pd
+pd.options.future.infer_string = False
+
+
 def aggregate_emissions(data: pd.DataFrame, group_by: str = "project") -> pd.DataFrame:
     df = data.copy()
     df['timestamp'] = pd.to_datetime(df['timestamp'])

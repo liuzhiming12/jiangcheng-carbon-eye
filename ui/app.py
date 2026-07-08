@@ -1,7 +1,10 @@
 """Jiangcheng Carbon Eye Pro — Streamlit UI."""
 
-import streamlit as st
 import pandas as pd
+# pandas 3.0 uses PyArrow strings by default, which Streamlit doesn't support
+pd.options.future.infer_string = False
+
+import streamlit as st
 import sys
 import os
 import plotly.express as px

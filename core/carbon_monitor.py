@@ -8,6 +8,9 @@ Carbon intensity: 0.4044 kgCO2/kWh (Hubei grid OM factor 2023, MEE 2025 bulletin
 """
 
 import pandas as pd
+# pandas 3.0 compat: disable PyArrow string backend for Streamlit
+pd.options.future.infer_string = False
+
 import time
 import os
 

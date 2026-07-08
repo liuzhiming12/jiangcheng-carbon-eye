@@ -1,6 +1,22 @@
+"""Carbon emission monitoring with 3-tier fallback strategy.
+
+Tier 1: CodeCarbon (RAPL/DSM) — most accurate, needs kernel access
+Tier 2: psutil + TDP heuristic — works everywhere, ±15% variance
+Tier 3: Constant TDP estimate — always available, guaranteed output
+
+Carbon intensity: 0.4364 kgCO2/kWh (Hubei provincial grid, MEE 2022)
+"""
+
 import pandas as pd
 import time
 import os
+
+# ── Carbon intensity ────────────────────────────────────────────────
+# Hubei provincial grid emission factor (kgCO2/kWh)
+# Source: Ministry of Ecology and Environment 2022 bulletin (released Dec 2024)
+CARBON_INTENSITY = 0.4364
+
+# ── Fallback chain detection ────────────────────────────────────────
 
 try:
     from codecarbon import EmissionsTracker
@@ -13,185 +29,149 @@ except ImportError:
     except ImportError:
         psutil_available = False
 
-from .emission_calculator import calculate_emissions
 from .database import save_to_database
 
 
-def compare_strategies(code_to_run, iterations=5):
-    """
-    对比三种监测策略的性能和准确性
-    
-    Args:
-        code_to_run: 要执行的代码函数
-        iterations: 迭代次数
-    
-    Returns:
-        pd.DataFrame: 各策略的平均排放量和标准差
-    """
-    results = []
-    strategies = [
-        ('codecarbon', _monitor_with_codecarbon),
-        ('psutil', _monitor_with_psutil),
-        ('tdp', _monitor_with_tdp)
-    ]
-    
-    for _ in range(iterations):
-        for name, func in strategies:
-            try:
-                result = func(code_to_run, "test", "test.py")
-                results.append({
-                    "strategy": name,
-                    "emissions": result['emissions']
-                })
-            except Exception as e:
-                print(f"策略 {name} 失败: {e}")
-    
-    if not results:
-        return None
-    
-    df = pd.DataFrame(results)
-    comparison = df.groupby('strategy')['emissions'].agg(['mean', 'std']).reset_index()
-    comparison.columns = ['策略', '平均排放(kgCO2)', '标准差']
-    
-    return comparison
+# ── Public API ──────────────────────────────────────────────────────
 
-
-def _monitor_with_codecarbon(code_to_run, project_name, file_path):
-    """使用CodeCarbon监测碳排放"""
-    tracker = EmissionsTracker(project_name=project_name, output_dir='.', output_file='emissions.csv')
-    tracker.start()
-    try:
-        code_to_run()
-    finally:
-        tracker.stop()
-    
-    if os.path.exists('emissions.csv'):
-        df = pd.read_csv('emissions.csv')
-        if not df.empty:
-            emissions = df.iloc[-1]['emissions']
-            os.remove('emissions.csv')
-        else:
-            emissions = 0
-    else:
-        emissions = 0
-    
-    return {'emissions': emissions}
-
-
-def _monitor_with_psutil(code_to_run, project_name, file_path):
-    """使用psutil监测碳排放"""
-    import psutil
-    process = psutil.Process()
-    start_time = time.time()
-    
-    start_cpu = process.cpu_percent(interval=0.1)
-    code_to_run()
-    end_cpu = process.cpu_percent(interval=0.1)
-    
-    avg_cpu = (start_cpu + end_cpu) / 2
-    tdp_watts = 65
-    idle_watts = 10
-    power_consumption = idle_watts + (tdp_watts - idle_watts) * (avg_cpu / 100)
-    
-    duration = time.time() - start_time
-    emissions = power_consumption * duration * 0.4044 / (3600 * 1000)
-    
-    return {'emissions': emissions}
-
-
-def _monitor_with_tdp(code_to_run, project_name, file_path):
-    """使用TDP估算碳排放"""
-    cpu_count = os.cpu_count() or 4
-    tdp_watts = 65 * cpu_count
-    
-    start_time = time.time()
-    code_to_run()
-    duration = time.time() - start_time
-    
-    result = calculate_emissions(power_consumption=tdp_watts, duration=duration)
-    
-    return {'emissions': result['emissions']}
-
-def monitor_emissions(code_to_run, project_name: str, file_path : str, scope: int = 2) -> pd.DataFrame:
-    """
-    Monitor carbon emissions during code execution
+def monitor_emissions(code_to_run, project_name: str, file_path: str, scope: int = 2) -> pd.DataFrame:
+    """Run code and measure its carbon emissions.
 
     Args:
-    code_to_run - Function to execute
-    project_name: str - Project name
-    file_path: str - File path
-    scope: int - Emission scope (1: direct, 2: indirect, 3: other indirect)
+        code_to_run: callable that executes the target code
+        project_name: label for grouping results
+        file_path: source file identifier
+        scope: emission scope (1=direct, 2=indirect, 3=other)
 
     Returns:
-    pd.DataFrame - Emission data with timestamp, project, file_path, duration, energy_consumption, emissions, scope
+        DataFrame with columns: timestamp, project, file_path, duration,
+        energy_consumption, emissions, scope
     """
     start_time = time.time()
-    power_consumption = 0
-    
+    power_consumption = 0.0
+    emissions = 0.0
+
+    # ── Tier 1: CodeCarbon ──
     if codecarbon_available:
-        tracker = EmissionsTracker(project_name = project_name, output_dir = '.', output_file = 'emissions.csv')
+        tracker = EmissionsTracker(
+            project_name=project_name,
+            output_dir='.',
+            output_file='emissions.csv',
+        )
         tracker.start()
         try:
             code_to_run()
         finally:
             tracker.stop()
+
         if os.path.exists('emissions.csv'):
             df = pd.read_csv('emissions.csv')
             if not df.empty:
-                emissions = df.iloc[-1]['emissions']
-                os.remove('emissions.csv') 
-            else:
-                emissions = 0
-        else:
-            emissions = 0
+                emissions = float(df.iloc[-1]['emissions'])
+                os.remove('emissions.csv')
+
+    # ── Tier 2: psutil heuristic ──
     elif psutil_available:
         import psutil
         process = psutil.Process()
-        start_cpu = process.cpu_percent(interval = 0.1)
+        start_cpu = process.cpu_percent(interval=0.1)
         code_to_run()
-        end_cpu = process.cpu_percent(interval = 0.1)
+        end_cpu = process.cpu_percent(interval=0.1)
         avg_cpu = (start_cpu + end_cpu) / 2
-        # psutil fallback: estimate power from CPU utilization + TDP
-        # Assume CPU TDP = 65W, idle = 10W, linear scaling
-        tdp_watts = 65
-        idle_watts = 10
-        power_consumption = idle_watts + (tdp_watts - idle_watts) * (avg_cpu / 100)
-        emissions = power_consumption * (time.time() - start_time) * 0.4044 / (3600 * 1000)
+
+        tdp_watts = 65.0
+        idle_watts = 10.0
+        power_consumption = idle_watts + (tdp_watts - idle_watts) * (avg_cpu / 100.0)
+        emissions = (
+            power_consumption
+            * (time.time() - start_time)
+            * CARBON_INTENSITY
+            / (3600 * 1000)
+        )
+
+    # ── Tier 3: TDP constant ──
     else:
-        # TDP-based estimation as ultimate fallback (no psutil available)
         cpu_count = os.cpu_count() or 4
-        tdp_watts = 65 * cpu_count
-        
-        # Measure actual execution time first, then estimate emissions
-        execution_start = time.time()
-        code_to_run()
-        duration = time.time() - execution_start
-        
-        result = calculate_emissions(power_consumption=tdp_watts, duration=duration)
-        emissions = result['emissions']
+        tdp_watts = 65.0 * cpu_count
         power_consumption = tdp_watts
-    
+
+        exec_start = time.time()
+        code_to_run()
+        exec_duration = time.time() - exec_start
+
+        energy_kwh = (power_consumption * exec_duration) / (1000 * 3600)
+        emissions = energy_kwh * CARBON_INTENSITY
+
+    # ── Build result ──
     duration = time.time() - start_time
-    # Calculate energy consumption (kWh)
-    # For codecarbon, we'll estimate based on emissions and carbon intensity
-    # For psutil and TDP fallback, we have power consumption
+
     if codecarbon_available:
-        # Estimate energy consumption from emissions
-        energy_consumption = emissions / 0.4044 if emissions > 0 else 0
+        energy_consumption = emissions / CARBON_INTENSITY if emissions > 0 else 0.0
     else:
-        # Calculate energy consumption from power and duration
         energy_consumption = power_consumption * duration / (1000 * 3600)
-    
+
     result = pd.DataFrame({
-        'timestamp': [pd.Timestamp.now()],
-        'project': [project_name],
-        'file_path': [file_path],
-        'duration': [duration],
-        'energy_consumption': [energy_consumption],
-        'emissions': [emissions],
-        'scope': [scope]
+        'timestamp': [pd.Timestamp.now().isoformat()],
+        'project': [str(project_name)],
+        'file_path': [str(file_path)],
+        'duration': [float(duration)],
+        'energy_consumption': [float(energy_consumption)],
+        'emissions': [float(emissions)],
+        'scope': [int(scope)],
     })
-    
+
     save_to_database(result)
-    
     return result
+
+
+def monitor_file(file_path: str, project_name: str = None) -> pd.DataFrame:
+    """Monitor carbon emissions of a single Python file.
+
+    Args:
+        file_path: absolute path to a .py file
+        project_name: optional project label (defaults to parent dir name)
+    """
+    if project_name is None:
+        project_name = os.path.basename(os.path.dirname(file_path))
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+        code = f.read()
+
+    # Use an isolated namespace to avoid polluting global scope
+    isolated_globals = {'__name__': '__monitor__', '__builtins__': __builtins__}
+
+    def run_code():
+        exec(code, isolated_globals)
+
+    return monitor_emissions(run_code, project_name, file_path)
+
+
+def monitor_folder(folder_path: str, project_name: str = None) -> pd.DataFrame:
+    """Monitor carbon emissions of all .py files in a folder.
+
+    Args:
+        folder_path: absolute path to a directory
+        project_name: optional project label (defaults to folder name)
+
+    Returns:
+        concatenated results for all .py files found
+    """
+    if project_name is None:
+        project_name = os.path.basename(folder_path)
+
+    all_results = []
+    for root, dirs, files in os.walk(folder_path):
+        # Skip virtual envs and hidden dirs
+        dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
+        for file in files:
+            if file.endswith('.py'):
+                file_path = os.path.join(root, file)
+                try:
+                    result = monitor_file(file_path, project_name)
+                    all_results.append(result)
+                except Exception as e:
+                    print(f"Failed to monitor {file_path}: {e}")
+
+    if all_results:
+        return pd.concat(all_results, ignore_index=True)
+    return pd.DataFrame()

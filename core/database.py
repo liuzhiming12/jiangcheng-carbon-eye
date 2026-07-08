@@ -2,9 +2,6 @@ import sqlite3
 import pandas as pd
 
 def init_database(db_path: str = "carbon_data.db"):
-    """
-    Initialize the database with necessary tables
-    """
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute('''
@@ -23,33 +20,40 @@ def init_database(db_path: str = "carbon_data.db"):
     conn.close()
 
 def save_to_database(data: pd.DataFrame, db_path: str = "carbon_data.db"):
-    """
-    Save emissions data to SQLite database
-    """
     init_database(db_path)
     
-    # Only keep columns that exist in the database table
     allowed_columns = ['timestamp', 'project', 'file_path', 'duration', 'energy_consumption', 'emissions', 'scope']
-    data = data[allowed_columns]
+    data = data[allowed_columns].copy()
+    
+    for col in data.columns:
+        if str(data[col].dtype).startswith('Large') or str(data[col].dtype) == 'string':
+            data[col] = data[col].astype(object)
+    
+    data['timestamp'] = data['timestamp'].astype(str)
     
     conn = sqlite3.connect(db_path)
     data.to_sql('emissions', conn, if_exists = 'append', index = False)
     conn.close()
 
 def load_from_database(db_path: str = "carbon_data.db") -> pd.DataFrame:
-    """
-    Load emission data from SQLite database
-    """
     init_database(db_path)
     conn = sqlite3.connect(db_path)
     data = pd.read_sql('SELECT * FROM emissions', conn)
     conn.close()
+    
+    for col in data.columns:
+        if str(data[col].dtype).startswith('Large') or str(data[col].dtype) == 'string':
+            data[col] = data[col].astype(object)
+    
+    data['timestamp'] = pd.to_datetime(data['timestamp'])
+    data['duration'] = data['duration'].astype(float)
+    data['energy_consumption'] = data['energy_consumption'].astype(float)
+    data['emissions'] = data['emissions'].astype(float)
+    data['scope'] = data['scope'].astype(int)
+    
     return data
 
 def get_projects(db_path: str = "carbon_data.db") -> list:
-    """
-    Get all unique project names from database
-    """
     init_database(db_path)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()

@@ -1,61 +1,31 @@
+"""Jiangcheng Carbon Eye Pro — Streamlit UI."""
+
 import streamlit as st
 import pandas as pd
 import sys
 import os
 import plotly.express as px
-import plotly.graph_objects as go
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.emission_calculator import calculate_emissions
+from core.carbon_monitor import monitor_emissions, monitor_file, monitor_folder
 from core.data_aggregator import aggregate_emissions
-from core.carbon_monitor import monitor_emissions
+from core.database import save_to_database, load_from_database
 from ui.locales import locales
 
 st.set_page_config(
-    page_title = "Jiangcheng Carbon Eye Pro",
-    page_icon = "🌍",
-    layout = "wide"
+    page_title="Jiangcheng Carbon Eye Pro",
+    page_icon="🌍",
+    layout="wide",
 )
 
-# 添加专业配色方案
-st.markdown("""
-<style>
-:root {
-    --primary-color: #22c55e;
-    --secondary-color: #16a34a;
-    --bg-dark: #0f172a;
-    --bg-card: #1e293b;
-}
-
-.stMetric {
-    background: var(--bg-card);
-    padding: 1rem;
-    border-radius: 0.5rem;
-    border-left: 4px solid var(--primary-color);
-}
-
-.stButton>button {
-    background: var(--primary-color);
-    color: white;
-    border-radius: 0.5rem;
-}
-
-h1, h2, h3 {
-    color: #f1f5f9;
-}
-
-.stDataFrame {
-    background: var(--bg-card);
-}
-</style>
-""", unsafe_allow_html=True)
+# ── Sidebar ─────────────────────────────────────────────────────────
 
 language = st.sidebar.selectbox(
     "Language",
-    options = ["zh", "en"],
-    format_func = lambda x: locales[x]["chinese"] if x == "zh" else locales[x]["english"],
-    key = "language"
+    options=["zh", "en"],
+    format_func=lambda x: locales[x]["chinese"] if x == "zh" else locales[x]["english"],
+    key="language",
 )
 
 current_locale = locales[language]
@@ -65,25 +35,46 @@ st.markdown("---")
 
 page = st.sidebar.radio(
     current_locale["sidebar_title"],
-    [current_locale["home"],
-    current_locale["monitoring"],
-    current_locale["analysis"],
-    current_locale["energy_carbon_dashboard"],
-    current_locale["ai_insights"],
-    current_locale["about"]],
-    key = "page"
+    [
+        current_locale["home"],
+        current_locale["monitoring"],
+        current_locale["analysis"],
+        current_locale["energy_carbon_dashboard"],
+        current_locale["ai_insights"],
+        current_locale["about"],
+    ],
+    key="page",
 )
 
-def generate_sample_data():
-    """Generate sample monitoring data"""
-    return pd.DataFrame({
-        'timestamp': pd.date_range('2024-01-01', periods=20, freq='h'),
-        'project': ['Project A'] * 10 + ['Project B'] * 10,
-        'file_path': ['file1.py', 'file2.py'] * 10,
-        'duration': [1.0] * 20,
-        'emissions': [0.05, 0.06, 0.04, 0.07, 0.05, 0.08, 0.06, 0.09, 0.07, 0.05,
-                      0.08, 0.07, 0.09, 0.06, 0.08, 0.05, 0.07, 0.06, 0.08, 0.05]
-    })
+
+# ── Helpers ─────────────────────────────────────────────────────────
+
+def _get_data() -> pd.DataFrame:
+    """Load real data from database, fall back to sample if empty."""
+    data = load_from_database()
+    if data.empty:
+        return _generate_sample_data()
+    return data
+
+
+def _generate_sample_data() -> pd.DataFrame:
+    """Generate demo data for first-run experience."""
+    now = pd.Timestamp.now()
+    records = []
+    for i in range(20):
+        records.append({
+            'timestamp': (now - pd.Timedelta(hours=i)).isoformat(),
+            'project': 'Project A' if i < 10 else 'Project B',
+            'file_path': 'file1.py' if i % 2 == 0 else 'file2.py',
+            'duration': 1.0,
+            'energy_consumption': 0.01 + i * 0.002,
+            'emissions': 0.05 + i * 0.004,
+            'scope': 2,
+        })
+    return pd.DataFrame(records)
+
+
+# ── Page: Home ──────────────────────────────────────────────────────
 
 if page == current_locale["home"]:
     st.header(current_locale["project_intro"])
@@ -106,42 +97,92 @@ if page == current_locale["home"]:
     st.markdown("---")
     st.info(current_locale["carbon_intensity"])
 
+
+# ── Page: Monitoring ────────────────────────────────────────────────
+
 elif page == current_locale["monitoring"]:
     st.header(current_locale["real_time_monitoring"])
-    
-    st.subheader("🔧 Run Code Monitoring")
-    project_name = st.text_input("Project Name", "Default Project")
-    file_path = st.text_input("File Path", "main.py")
-    
-    test_code = st.text_area("Enter code to monitor (Python)", """
-import time
+
+    st.subheader("🔧 Code Monitoring")
+    mode = st.radio(
+        "Monitoring mode",
+        ["Single code snippet", "File path", "Folder path"],
+        index=0,
+        horizontal=True,
+    )
+
+    project_name = st.text_input("Project Name", "default_project")
+
+    if mode == "Single code snippet":
+        test_code = st.text_area(
+            "Enter Python code to monitor",
+            """import time
 import math
 
-# Sample computation-intensive code
 result = 0
 for i in range(10000000):
     result += math.sin(i) * math.cos(i)
-""", height=200)
-    
-    if st.button("▶ Start Monitoring"):
-        with st.spinner("Running and monitoring emissions..."):
-            from core.carbon_monitor import monitor_emissions
-            
-            def run_code():
-                exec(test_code)
-            
-            result = monitor_emissions(run_code, project_name, file_path)
-            st.success(f"✅ Monitoring complete! Emissions: {result['emissions'].iloc[0]:.6f} kgCO2")
+""",
+            height=200,
+        )
 
-    from core.database import load_from_database
-    db_data = load_from_database()
+        if st.button("▶ Start Monitoring", key="btn_snippet"):
+            with st.spinner("Running and monitoring emissions..."):
+                def run_code():
+                    exec(test_code)
 
-    if not db_data.empty:
-        monitoring_data = db_data
-        st.info("📊 Displaying real data from database")
-    else:
-        monitoring_data = generate_sample_data()
-        st.info("📊 Displaying sample data (run monitoring first to collect real data)")
+                result_df = monitor_emissions(run_code, project_name, "snippet.py")
+                st.success(
+                    f"✅ Monitoring complete! "
+                    f"Emissions: {result_df['emissions'].iloc[0]:.6f} kgCO2"
+                )
+                st.info("💾 Result automatically saved to database")
+
+    elif mode == "File path":
+        file_path = st.text_input(
+            "Enter Python file path",
+            os.path.join(os.path.dirname(__file__), "app.py"),
+        )
+
+        if st.button("▶ Monitor File", key="btn_file"):
+            if os.path.exists(file_path) and file_path.endswith('.py'):
+                with st.spinner(f"Monitoring {os.path.basename(file_path)}..."):
+                    result_df = monitor_file(file_path, project_name)
+                    st.success(
+                        f"✅ Monitoring complete! "
+                        f"Emissions: {result_df['emissions'].iloc[0]:.6f} kgCO2"
+                    )
+                    st.info("💾 Result automatically saved to database")
+            else:
+                st.error("❌ File not found or not a .py file")
+
+    elif mode == "Folder path":
+        folder_path = st.text_input(
+            "Enter folder path",
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        )
+
+        if st.button("▶ Monitor Folder", key="btn_folder"):
+            if os.path.isdir(folder_path):
+                with st.spinner(f"Monitoring all .py files in {folder_path}..."):
+                    result_df = monitor_folder(folder_path, project_name)
+                    if not result_df.empty:
+                        total = result_df['emissions'].sum()
+                        st.success(
+                            f"✅ Monitoring complete! "
+                            f"Total emissions: {total:.6f} kgCO2 "
+                            f"({len(result_df)} files)"
+                        )
+                        st.table(result_df[['file_path', 'duration', 'emissions']])
+                        st.info("💾 Results automatically saved to database")
+                    else:
+                        st.warning("⚠️ No Python files found")
+            else:
+                st.error("❌ Folder not found")
+
+    # ── Monitoring dashboard ──
+    st.markdown("---")
+    monitoring_data = _get_data()
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -149,58 +190,82 @@ for i in range(10000000):
         st.metric(current_locale["total_emissions"], f"{total_emissions:.4f} kgCO2")
     with col2:
         monitor_count = len(monitoring_data)
-        st.metric(current_locale["monitoring_count"], f"{monitor_count}")
+        st.metric(current_locale["monitoring_count"], str(monitor_count))
     with col3:
         avg_emissions = monitoring_data["emissions"].mean()
-        st.metric(current_locale["avg_emissions"],f"{avg_emissions:.4f} kgCO2")
+        st.metric(current_locale["avg_emissions"], f"{avg_emissions:.4f} kgCO2")
+
     st.markdown("---")
     st.subheader(current_locale["emission_trend"])
-    fig = px.line(monitoring_data, x='timestamp', y='emissions', title=current_locale["emission_trend"])
+
+    trend_data = monitoring_data.copy()
+    trend_data['timestamp'] = pd.to_datetime(trend_data['timestamp'])
+
+    fig = px.line(
+        trend_data, x='timestamp', y='emissions',
+        title=current_locale["emission_trend"],
+    )
     st.plotly_chart(fig, use_container_width=True)
+
     st.markdown("---")
     st.subheader(current_locale["monitoring_data"])
-    st.dataframe(monitoring_data)
+    st.dataframe(monitoring_data, use_container_width=True)
+
+
+# ── Page: Analysis ──────────────────────────────────────────────────
 
 elif page == current_locale["analysis"]:
     st.header(current_locale["data_analysis"])
-    
-    from core.database import load_from_database
-    data = load_from_database()
-    
-    if not data.empty:
-        analysis_data = data
-    else:
-        analysis_data = generate_sample_data()
-        st.info("📊 Displaying sample data (run monitoring first to collect real data)")
+
+    analysis_data = _get_data()
 
     st.subheader(current_locale["select_dimension"])
     group_by = st.selectbox(
         current_locale["select_dimension"],
-        ["project", "file_path", "hour", "day", "week", "month", "quarter", "year"]
+        ["project", "file_path", "hour", "day", "week", "month", "quarter", "year"],
     )
-    result = aggregate_emissions(analysis_data, group_by = group_by)
+
+    result = aggregate_emissions(analysis_data, group_by=group_by)
+
     st.subheader(current_locale["aggregation_result"])
     col1, col2 = st.columns(2)
     with col1:
-        fig = px.bar(result, x=result.columns[0], y='total_emissions', title=current_locale["total_emissions_compare"])
+        fig = px.bar(
+            result, x=result.columns[0], y='total_emissions',
+            title=current_locale["total_emissions_compare"],
+        )
         st.plotly_chart(fig, use_container_width=True)
     with col2:
-        fig = px.bar(result, x=result.columns[0], y='avg_emissions', title=current_locale["avg_emissions_compare"])
+        fig = px.bar(
+            result, x=result.columns[0], y='avg_emissions',
+            title=current_locale["avg_emissions_compare"],
+        )
         st.plotly_chart(fig, use_container_width=True)
+
     st.markdown("---")
     st.subheader(current_locale["detailed_data"])
-    st.dataframe(result)
-    csv_data = result.to_csv(index = False)
-    st.download_button(label = current_locale["download_csv"], data = csv_data, file_name = f"emissions_by_{group_by}.csv", mime = "text/csv")
+    st.dataframe(result, use_container_width=True)
+
+    csv_data = result.to_csv(index=False)
+    st.download_button(
+        label=current_locale["download_csv"],
+        data=csv_data,
+        file_name=f"emissions_by_{group_by}.csv",
+        mime="text/csv",
+    )
+
+
+# ── Page: Dashboard ─────────────────────────────────────────────────
 
 elif page == current_locale["energy_carbon_dashboard"]:
     st.header("⚡ " + current_locale["energy_carbon_dashboard"])
 
-    from core.database import load_from_database
-    from core.data_aggregator import aggregate_emissions
     data = load_from_database()
 
-    if not data.empty:
+    if data.empty:
+        st.warning(current_locale["upload_data_first"])
+        st.info("💡 Run a monitoring task first to collect real data.")
+    else:
         st.subheader(current_locale["overview"])
         col1, col2, col3, col4 = st.columns(4)
 
@@ -222,57 +287,71 @@ elif page == current_locale["energy_carbon_dashboard"]:
         trend_data = data.copy()
         trend_data['timestamp'] = pd.to_datetime(trend_data['timestamp'])
         trend_data = trend_data.set_index('timestamp')
-        trend_data = trend_data.resample('D').sum()
+        trend_data = trend_data.resample('D').sum(numeric_only=True)
 
-        fig = px.line(trend_data, y=['energy_consumption', 'emissions'], title=current_locale["energy_emission_trend"])
+        fig = px.line(
+            trend_data, y=['energy_consumption', 'emissions'],
+            title=current_locale["energy_emission_trend"],
+        )
         fig.update_layout(yaxis_title="Value")
         st.plotly_chart(fig, use_container_width=True)
 
         st.subheader(current_locale["project_comparison"])
         project_data = aggregate_emissions(data, group_by="project")
-        
-        fig = px.pie(project_data, values='total_emissions', names='project', 
-                     title=current_locale["project_comparison"],
-                     hole=0.3)
+
+        fig = px.pie(
+            project_data, values='total_emissions', names='project',
+            title=current_locale["project_comparison"], hole=0.3,
+        )
         st.plotly_chart(fig, use_container_width=True)
 
         st.subheader(current_locale["file_comparison"])
         file_data = aggregate_emissions(data, group_by="file_path")
-        
-        fig = px.bar(file_data, x='file_path', y='total_emissions', 
-                     title=current_locale["file_comparison"],
-                     color='total_emissions', color_continuous_scale='Viridis')
+
+        fig = px.bar(
+            file_data, x='file_path', y='total_emissions',
+            title=current_locale["file_comparison"],
+            color='total_emissions', color_continuous_scale='Viridis',
+        )
         fig.update_layout(xaxis_tickangle=-45)
         st.plotly_chart(fig, use_container_width=True)
 
         st.subheader(current_locale["detailed_data"])
-        st.dataframe(data)
+        st.dataframe(data, use_container_width=True)
 
-    else:
-        st.warning(current_locale["upload_data_first"])
+
+# ── Page: AI Insights ───────────────────────────────────────────────
 
 elif page == current_locale["ai_insights"]:
     st.header("🤖 " + current_locale["ai_insights"])
 
-    from core.database import load_from_database
     data = load_from_database()
 
-    if not data.empty:
-        project_name = st.text_input(current_locale["project_name"], "Default Project")
-
-        if st.button(current_locale["generate_esg_report"]):
-            with st.spinner(current_locale["generating_report"]):
-                from core.ai_insights import generate_esg_insights
-                report = generate_esg_insights(data, project_name, language)
-                st.markdown(report)
-
-        if st.button(current_locale["generate_reduction_suggestions"]):
-            with st.spinner(current_locale["generating_suggestions"]):
-                from core.ai_insights import generate_reduction_suggestions
-                suggestions = generate_reduction_suggestions(data, language)
-                st.markdown(suggestions)
-    else:
+    if data.empty:
         st.warning(current_locale["upload_data_first"])
+        st.info("💡 Run a monitoring task first to collect real data.")
+    else:
+        project_name = st.text_input(
+            current_locale["project_name"], "Default Project",
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button(current_locale["generate_esg_report"]):
+                with st.spinner(current_locale["generating_report"]):
+                    from core.ai_insights import generate_esg_insights
+                    report = generate_esg_insights(data, project_name, language)
+                    st.markdown(report)
+
+        with col2:
+            if st.button(current_locale["generate_reduction_suggestions"]):
+                with st.spinner(current_locale["generating_suggestions"]):
+                    from core.ai_insights import generate_reduction_suggestions
+                    suggestions = generate_reduction_suggestions(data, language)
+                    st.markdown(suggestions)
+
+
+# ── Page: About ─────────────────────────────────────────────────────
 
 elif page == current_locale["about"]:
     st.header(current_locale["about_project"])

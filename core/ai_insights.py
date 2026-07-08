@@ -89,7 +89,7 @@ Through continuous monitoring and optimization, a 20-30% reduction in code execu
 请包含以下内容：
 1. 项目碳排放概况
 2. 减排建议（至少5条）
-3. 武汉本地化建议（考虑湖北电网碳强度 0.4044 kgCO2/kWh）
+3. 武汉本地化建议（考虑湖北电网碳强度 0.4364 kgCO2/kWh）
 4. 长期优化策略
 5. 结论和下一步行动建议
 
@@ -109,7 +109,7 @@ Max Emissions: {max_emission:.4f} kgCO2
 Please include:
 1. Project Carbon Emission Overview
 2. Reduction Suggestions (at least 5)
-3. Wuhan Localized Suggestions (considering Hubei grid carbon intensity 0.4044 kgCO2/kWh)
+3. Wuhan Localized Suggestions (considering Hubei grid carbon intensity 0.4364 kgCO2/kWh)
 4. Long-term Optimization Strategies
 5. Conclusions and Next Steps
 

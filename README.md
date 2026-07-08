@@ -1,4 +1,6 @@
-# Jiangcheng Carbon Eye Pro
+# Jiangcheng Carbon Eye Pro · 江城碳眼
+
+> 🟢 红鸟碳眼 · 代码级模块 — 实时监测每一行 Python 代码的碳排放
 
 A lightweight, locally-calibrated carbon monitoring tool for developers.
 Measures CO₂ emissions from Python processes using Hubei provincial emission factors.
@@ -65,7 +67,7 @@ co2_kg = energy_kwh * 0.4044
 
 - `cpu_percent` comes from `psutil.Process().cpu_percent()`
 - `tdp_watts` defaults to 65W (per-core), `idle_watts` to 10W
-- `0.4044` is the Hubei provincial grid emission factor (kgCO₂/kWh), from the Ministry of Ecology and Environment 2022 bulletin (released Dec 2024). Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share.
+- `0.4044` is the Hubei provincial grid OM emission factor (kgCO₂/kWh), from the MEE 2025 bulletin (2023 regional grid carbon intensity data). Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share.
 
 ## Quick Start
 
@@ -133,6 +135,24 @@ Generate ESG analysis reports and carbon reduction suggestions (requires Qwen AP
 
 MIT
 
-## Related Project
+## 🌐 红鸟碳眼 · Redbird Carbon Eye
 
-- **`https://github.com/liuzhiming12/wenli-carbon-calc`** — Batch processing layer for institutional ESG reporting. Same carbon engine, different input.
+**红鸟碳眼** 是我在红鸟挑战营第三期打造的碳管理产品矩阵，包含两个互补模块：
+
+| 模块 | 定位 | 粒度 | 输入 | 场景 |
+|------|------|------|------|------|
+| **江城碳眼 Pro** ← 本项目 | 实时代码级监测 | 进程级、秒级 | 代码片段/文件/文件夹 | 开发者自查 |
+| **[文理碳算](https://github.com/liuzhiming12/wenli-carbon-calc)** | 批量机构碳核算 | 建筑级、月级 | 水电燃气账单 Excel | 校园/企业 ESG 报告 |
+
+> 两个项目共享同一套碳排放因子引擎（湖北电网 OM 因子 0.4044 kgCO₂/kWh，MEE 2025），
+> 从不同维度覆盖"代码运行→机构运营"的完整碳足迹链路。
+
+## 👤 关于作者
+
+**刘志明** · 武汉文理学院 · 红鸟挑战营第三期
+
+- GitHub: [@liuzhiming12](https://github.com/liuzhiming12)
+- Email: liuzhiming_2005@qq.com
+
+> 武汉本地开发者普遍不关注代码碳排放，企业 ESG 报告中 IT 部门能耗数据常为空白。
+> 我通过这两个项目，尝试用轻量级工具填补这一缺口——从一行代码到一个校园，碳皆可量化。

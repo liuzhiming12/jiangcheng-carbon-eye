@@ -16,7 +16,7 @@ I couldn't find a lightweight tool that:
 ## What It Does
 
 - **3-mode monitoring**: code snippets, single files, or entire project folders
-- Calculates CO₂ emissions using **Hubei provincial emission factor 0.4364 kgCO₂/kWh** (MEE 2022 bulletin)
+- Calculates CO₂ emissions using **Hubei provincial emission factor 0.4044 kgCO₂/kWh** (MEE 2025 bulletin (2023 regional grid carbon intensity))
 - Auto-saves results to SQLite database for analysis
 - Provides real-time dashboard with project-level and file-level breakdown
 - Generates AI-powered ESG reports and reduction suggestions
@@ -60,12 +60,12 @@ The core engineering decision: when CodeCarbon fails, degrade gracefully rather 
 ```
 power_estimate = idle_watts + (tdp_watts - idle_watts) * (cpu_percent / 100)
 energy_kwh = power_estimate * time_hours / 1000
-co2_kg = energy_kwh * 0.4364
+co2_kg = energy_kwh * 0.4044
 ```
 
 - `cpu_percent` comes from `psutil.Process().cpu_percent()`
 - `tdp_watts` defaults to 65W (per-core), `idle_watts` to 10W
-- `0.4364` is the Hubei provincial grid emission factor (kgCO₂/kWh), from the Ministry of Ecology and Environment 2022 bulletin (released Dec 2024). Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share.
+- `0.4044` is the Hubei provincial grid emission factor (kgCO₂/kWh), from the Ministry of Ecology and Environment 2022 bulletin (released Dec 2024). Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share.
 
 ## Quick Start
 
@@ -110,7 +110,7 @@ Generate ESG analysis reports and carbon reduction suggestions (requires Qwen AP
 
 ## Current Limitations
 
-- Static carbon factor (0.4364); synthetic data used for validation; no real-world campus deployment yet
+- Static carbon factor (0.4044); synthetic data used for validation; no real-world campus deployment yet
 - Application-layer estimation only; TDP model is a heuristic with unverified variance
 - No kernel-level instrumentation (RAPL/eBPF) yet — reading docs, planning integration with lab access
 - Tested on single Windows laptop; cross-platform validation pending

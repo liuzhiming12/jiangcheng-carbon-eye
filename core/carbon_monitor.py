@@ -4,7 +4,7 @@ Tier 1: CodeCarbon (RAPL/DSM) — most accurate, needs kernel access
 Tier 2: psutil + TDP heuristic — works everywhere, ±15% variance
 Tier 3: Constant TDP estimate — always available, guaranteed output
 
-Carbon intensity: 0.4364 kgCO2/kWh (Hubei provincial grid, MEE 2022)
+Carbon intensity: 0.4044 kgCO2/kWh (Hubei grid OM factor 2023, MEE 2025 bulletin)
 """
 
 import pandas as pd
@@ -14,7 +14,7 @@ import os
 # ── Carbon intensity ────────────────────────────────────────────────
 # Hubei provincial grid emission factor (kgCO2/kWh)
 # Source: Ministry of Ecology and Environment 2022 bulletin (released Dec 2024)
-CARBON_INTENSITY = 0.4364
+CARBON_INTENSITY = 0.4044
 
 # ── Fallback chain detection ────────────────────────────────────────
 

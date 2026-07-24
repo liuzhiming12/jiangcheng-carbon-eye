@@ -24,6 +24,7 @@ ENV/
 # IDE
 .vscode/
 .idea/
+.serena/
 *.swp
 *.swo
 *~
@@ -38,3 +39,8 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Startup scripts
+start.bat
+start.py
+start.ps1

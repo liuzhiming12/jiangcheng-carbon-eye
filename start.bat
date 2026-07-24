@@ -1,14 +1,13 @@
-@echo off  
+@echo off
 echo ========================================
 echo   Starting Jiangcheng Carbon Eye Pro...
-echo   江城碳眼Pro 启动中...
 echo ========================================
 cd /d "%~dp0"
 
 :: Activate virtual environment
-call ..\.venv\Scripts\activate.bat
+call "D:\桌面\hongniao_study\.venv\Scripts\activate.bat"
 
 :: Start Streamlit
-python -m streamlit run ui/app.py
+"D:\桌面\hongniao_study\.venv\Scripts\python.exe" -m streamlit run ui/app.py
 
-pause  
+pause

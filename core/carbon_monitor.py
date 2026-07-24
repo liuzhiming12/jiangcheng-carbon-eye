@@ -16,9 +16,10 @@ import os
 import ast
 
 # ── Carbon intensity ────────────────────────────────────────────────
-# Hubei provincial grid emission factor (kgCO2/kWh)
-# Source: Ministry of Ecology and Environment 2025 bulletin (2023 regional grid data)
-CARBON_INTENSITY = 0.4044
+# Loaded from factors.json (Hubei grid OM factor 0.4044, MEE 2025)
+from .factors import load_factors
+_FACTORS = load_factors()
+CARBON_INTENSITY = _FACTORS['electricity']['factor']
 
 # ── Fallback chain detection ────────────────────────────────────────
 

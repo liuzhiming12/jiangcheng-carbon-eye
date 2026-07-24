@@ -102,7 +102,15 @@ Aggregate emissions by project, file, hour, day, week, month, quarter, or year. 
 Overview metrics, energy & emission trends, project/file comparison charts.
 
 ### AI Insights
-Generate ESG analysis reports and carbon reduction suggestions (requires Qwen API key in `QWEN_API_KEY` env var; falls back to template-based reports otherwise).
+Generate ESG analysis reports and carbon reduction suggestions (requires ZhipuAI API key; falls back to template-based reports otherwise).
+
+> **配置方法**：复制 `.env.example` 为 `.env`，填入你的 ZhipuAI API Key：
+> ```bash
+> copy .env.example .env     # Windows
+> cp .env.example .env       # macOS / Linux
+> # 然后编辑 .env 填入 ZHIPU_API_KEY
+> ```
+> 没有 Key 也能用，AI 功能自动降级为模板报告。
 
 ## Tech Stack
 
@@ -118,7 +126,7 @@ Generate ESG analysis reports and carbon reduction suggestions (requires Qwen AP
 - Application-layer estimation only; TDP model is a heuristic with unverified variance
 - No kernel-level instrumentation (RAPL/eBPF) yet — reading docs, planning integration with lab access
 - Tested on single Windows laptop; cross-platform validation pending
-- AI insights use Tongyi Qianwen API with factual constraints (forced raw-data citation)
+- AI insights use ZhipuAI (智谱) API with factual constraints (forced raw-data citation); falls back to template reports when API key not configured
 
 ## Recent Updates
 

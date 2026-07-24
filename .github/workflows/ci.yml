@@ -1,0 +1,21 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Lint with ruff
+        run: |
+          pip install ruff
+          ruff check --output-format=github .
+        continue-on-error: true
+      - name: Test import
+        run: python -c "from core.factors import load_factors; f=load_factors(); print('OK:', f['electricity']['factor'])"

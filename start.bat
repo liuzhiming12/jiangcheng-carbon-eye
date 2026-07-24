@@ -1,1 +1,0 @@
-@cmd /c D:\桌面\hongniao_study\.venv\Scripts\python.exe D:\桌面\hongniao_study\projects_own\jiangcheng_carbon_eye\start.py

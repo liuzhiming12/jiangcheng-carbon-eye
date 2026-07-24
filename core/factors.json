@@ -1,0 +1,27 @@
+{
+  "description": "碳排放因子配置 / Carbon emission factors",
+  "updated": "2025 (MEE 2025 bulletin, 2023 regional grid data)",
+  "factors": {
+    "electricity": {
+      "factor": 0.4044,
+      "unit": "kgCO₂/kWh",
+      "scope": 2,
+      "source": "Hubei provincial grid OM factor (MEE 2025, 2023 data)",
+      "note": "湖北电网运行边际排放因子"
+    },
+    "natural_gas": {
+      "factor": 2.17,
+      "unit": "kgCO₂/m³",
+      "scope": 1,
+      "source": "MEE 2025 default factor",
+      "note": "天然气燃烧排放"
+    },
+    "water": {
+      "factor": 0.28,
+      "unit": "kgCO₂/t",
+      "scope": 3,
+      "source": "Urban water supply average",
+      "note": "自来水供应间接排放"
+    }
+  }
+}

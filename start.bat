@@ -4,5 +4,11 @@ echo   Starting Jiangcheng Carbon Eye Pro...
 echo   江城碳眼Pro 启动中...
 echo ========================================
 cd /d "%~dp0"
+
+:: Activate virtual environment
+call ..\.venv\Scripts\activate.bat
+
+:: Start Streamlit
 python -m streamlit run ui/app.py
+
 pause  

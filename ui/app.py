@@ -22,6 +22,32 @@ st.set_page_config(
     layout="wide",
 )
 
+# Hide Streamlit's AI chat button and footer
+st.markdown("""
+    <style>
+        /* Hide AI chat button */
+        [data-testid="stChatInput"] {
+            display: none !important;
+        }
+        /* Hide sidebar footer */
+        .st-emotion-cache-1c7y2kd {
+            display: none !important;
+        }
+        /* Hide any floating chat buttons */
+        .st-emotion-cache-q2lkh2 {
+            display: none !important;
+        }
+        /* Hide the entire chat widget */
+        [data-testid="stChatMessage"] {
+            display: none !important;
+        }
+        /* Hide app menu */
+        .st-emotion-cache-16txtl3 {
+            display: none !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # ── Sidebar ─────────────────────────────────────────────────────────
 
 language = st.sidebar.selectbox(
@@ -54,7 +80,9 @@ page = st.sidebar.radio(
 
 def _get_data() -> pd.DataFrame:
     """Load real data from database, fall back to sample if empty."""
-    data = load_from_database()
+    # 使用绝对路径确保数据一致性
+    db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "carbon_data.db")
+    data = load_from_database(db_path)
     if data.empty:
         return _generate_sample_data()
     return sanitize_dataframe(data)
@@ -64,14 +92,15 @@ def _generate_sample_data() -> pd.DataFrame:
     """Generate demo data for first-run experience."""
     now = pd.Timestamp.now()
     records = []
-    for i in range(20):
+    # 时间跨度改为30秒，模拟真实监测场景
+    for i in range(10):
         records.append({
-            'timestamp': (now - pd.Timedelta(hours=i)).isoformat(),
-            'project': 'Project A' if i < 10 else 'Project B',
+            'timestamp': (now - pd.Timedelta(seconds=i * 3)).isoformat(),
+            'project': 'Project A' if i < 5 else 'Project B',
             'file_path': 'file1.py' if i % 2 == 0 else 'file2.py',
             'duration': 1.0,
-            'energy_consumption': 0.01 + i * 0.002,
-            'emissions': 0.05 + i * 0.004,
+            'energy_consumption': 0.01 + i * 0.001,
+            'emissions': 0.05 + i * 0.002,
             'scope': 2,
         })
     return pd.DataFrame(records)
@@ -199,18 +228,6 @@ for i in range(10000000):
         st.metric(current_locale["avg_emissions"], f"{avg_emissions:.4f} kgCO2")
 
     st.markdown("---")
-    st.subheader(current_locale["emission_trend"])
-
-    trend_data = monitoring_data.copy()
-    trend_data['timestamp'] = pd.to_datetime(trend_data['timestamp'])
-
-    fig = px.line(
-        trend_data, x='timestamp', y='emissions',
-        title=current_locale["emission_trend"],
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("---")
     st.subheader(current_locale["monitoring_data"])
     st.dataframe(monitoring_data, use_container_width=True)
 
@@ -263,7 +280,8 @@ elif page == current_locale["analysis"]:
 elif page == current_locale["energy_carbon_dashboard"]:
     st.header("⚡ " + current_locale["energy_carbon_dashboard"])
 
-    data = load_from_database()
+    db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "carbon_data.db")
+    data = load_from_database(db_path)
 
     if data.empty:
         st.warning(current_locale["upload_data_first"])
@@ -285,19 +303,6 @@ elif page == current_locale["energy_carbon_dashboard"]:
             st.metric(current_locale["avg_emissions"], f"{avg_emissions:.4f} kgCO2")
         with col4:
             st.metric(current_locale["avg_energy_consumption"], f"{avg_energy:.4f} kWh")
-
-        st.subheader(current_locale["energy_emission_trend"])
-        trend_data = data.copy()
-        trend_data['timestamp'] = pd.to_datetime(trend_data['timestamp'])
-        trend_data = trend_data.set_index('timestamp')
-        trend_data = trend_data.resample('D').sum(numeric_only=True)
-
-        fig = px.line(
-            trend_data, y=['energy_consumption', 'emissions'],
-            title=current_locale["energy_emission_trend"],
-        )
-        fig.update_layout(yaxis_title="Value")
-        st.plotly_chart(fig, use_container_width=True)
 
         st.subheader(current_locale["project_comparison"])
         project_data = aggregate_emissions(data, group_by="project")
@@ -328,7 +333,8 @@ elif page == current_locale["energy_carbon_dashboard"]:
 elif page == current_locale["ai_insights"]:
     st.header("🤖 " + current_locale["ai_insights"])
 
-    data = load_from_database()
+    db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "carbon_data.db")
+    data = load_from_database(db_path)
 
     if data.empty:
         st.warning(current_locale["upload_data_first"])

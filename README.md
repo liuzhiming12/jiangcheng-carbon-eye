@@ -1,63 +1,77 @@
 # Jiangcheng Carbon Eye Pro · 江城碳眼
 
-> 🟢 红鸟碳眼 · 代码级模块 — 实时监测每一行 Python 代码的碳排放
+> 代码级碳监测工具 — 实时监测每一行 Python 代码的碳排放
 
 A lightweight, locally-calibrated carbon monitoring tool for developers.
 Measures CO₂ emissions from Python processes using Hubei provincial emission factors.
 
-## Why I Built This
+## 🏃 快速体验
 
-Developers treat AI assistants as free labor. No one measures the electricity bill.
+```bash
+# 1. 克隆项目
+git clone https://github.com/liuzhiming12/jiangcheng-carbon-eye.git
+cd jiangcheng-carbon-eye
 
-I couldn't find a lightweight tool that:
-- Uses **Hubei-specific carbon factors** (not global averages)
-- Works offline in restricted campus VMs
-- Degrades gracefully when external APIs fail
-- Shows emissions in real-time during development
+# 2. 安装依赖
+pip install -r requirements.txt
 
-## What It Does
-
-- **3-mode monitoring**: code snippets, single files, or entire project folders
-- Calculates CO₂ emissions using **Hubei provincial emission factor 0.4044 kgCO₂/kWh** (MEE 2025 bulletin (2023 regional grid carbon intensity))
-- Auto-saves results to SQLite database for analysis
-- Provides real-time dashboard with project-level and file-level breakdown
-- Generates AI-powered ESG reports and reduction suggestions
-
-## Architecture
-
-```
-core/
-├── carbon_monitor.py    # 3-tier fallback monitoring engine
-├── database.py          # SQLite persistence layer
-├── data_aggregator.py   # Multi-dimension emission aggregation
-└── ai_insights.py       # AI-powered ESG report generation
-
-ui/
-├── app.py               # Streamlit dashboard (6 pages)
-└── locales.py           # zh/en internationalization
+# 3. 启动服务
+streamlit run ui/app.py
 ```
 
-### Data Flow
+在浏览器中打开 `http://localhost:8501`，选择监测模式即可开始分析。**3 分钟跑起来！**
+
+## 🏗️ 架构图
 
 ```
-Code Snippet / File / Folder
-        │
-        ▼
-  carbon_monitor.py   ──►  SQLite DB
-        │                      │
-        ▼                      ▼
-  Real-time result      Analysis / Dashboard / AI Insights
+┌─────────────────────────────────────────────────────────────────┐
+│                        Streamlit 仪表盘                         │
+│  (6 pages: Monitoring / Analysis / Dashboard / AI Insights)     │
+└─────────────────────────────────────────────────────────────────┘
+                              ▲
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ ai_insights.py  │    │ data_aggregator │    │   database.py   │
+│  (AI ESG报告)   │    │    .py          │    │  (SQLite存储)    │
+│                 │    │  (多维聚合分析)   │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              ▲                     ▲
+                              │                     │
+                    ┌───────────────────────────────┘
+                    ▼
+            ┌───────────────────┐
+            │ carbon_monitor.py │
+            │   (3层降级监测)     │
+            │  - CodeCarbon     │
+            │  - psutil+TDP     │
+            │  - Constant TDP   │
+            └───────────────────┘
+                    ▲
+                    │
+        ┌───────────┼───────────┐
+        ▼           ▼           ▼
+   Code Snippet  File Path   Folder Path
 ```
 
-## 3-Tier Fallback
+## ✨ 功能特性
 
-The core engineering decision: when CodeCarbon fails, degrade gracefully rather than crash.
+- **3 种监测模式**：代码片段、单文件、项目文件夹
+- 使用 **湖北电网 OM 碳排放因子 0.4044 kgCO₂/kWh**（MEE 2025）计算碳排放
+- 自动保存结果到 SQLite 数据库
+- 实时仪表盘：项目级、文件级碳排放分析
+- AI 智能 ESG 报告和减排建议
 
-1. **CodeCarbon** → most accurate, requires Intel RAPL/DSM
-2. **psutil + TDP heuristic** → works everywhere, ~±15% variance (conservative estimate)
-3. **Constant TDP estimate** → worst case, guaranteed output
+## 🔄 3 层降级机制
 
-## How the Heuristic Works
+核心工程设计：当 CodeCarbon 不可用时，优雅降级而非崩溃。
+
+1. **CodeCarbon** → 最精确，需要 Intel RAPL/DSM
+2. **psutil + TDP 启发式** → 通用，~±15% 误差（保守估计）
+3. **常量 TDP 估计** → 最坏情况，保证输出
+
+## 📊 计算原理
 
 ```
 power_estimate = idle_watts + (tdp_watts - idle_watts) * (cpu_percent / 100)
@@ -65,21 +79,9 @@ energy_kwh = power_estimate * time_hours / 1000
 co2_kg = energy_kwh * 0.4044
 ```
 
-- `cpu_percent` comes from `psutil.Process().cpu_percent()`
-- `tdp_watts` defaults to 65W (per-core), `idle_watts` to 10W
-- `0.4044` is the Hubei provincial grid OM emission factor (kgCO₂/kWh), from the MEE 2025 bulletin (2023 regional grid carbon intensity data). Replaces CodeCarbon's default global average 0.475 because Hubei has a higher hydro share.
-
-## Quick Start
-
-```bash
-git clone https://github.com/liuzhiming12/jiangcheng-carbon-eye.git
-cd jiangcheng-carbon-eye
-
-pip install -r requirements.txt
-streamlit run ui/app.py
-```
-
-Open `http://localhost:8501` in your browser.
+- `cpu_percent` 来自 `psutil.Process().cpu_percent()`
+- `tdp_watts` 默认 65W（单核），`idle_watts` 默认 10W
+- `0.4044` 是湖北电网 OM 因子，替代 CodeCarbon 默认的全球平均 0.475
 
 ## How to Use
 
@@ -135,21 +137,9 @@ Generate ESG analysis reports and carbon reduction suggestions (requires Qwen AP
 
 MIT
 
-## 🌐 红鸟碳眼 · Redbird Carbon Eye
-
-**红鸟碳眼** 是我在红鸟挑战营第三期打造的碳管理产品矩阵，包含两个互补模块：
-
-| 模块 | 定位 | 粒度 | 输入 | 场景 |
-|------|------|------|------|------|
-| **江城碳眼 Pro** ← 本项目 | 实时代码级监测 | 进程级、秒级 | 代码片段/文件/文件夹 | 开发者自查 |
-| **[文理碳算](https://github.com/liuzhiming12/wenli-carbon-calc)** | 批量机构碳核算 | 建筑级、月级 | 水电燃气账单 Excel | 校园/企业 ESG 报告 |
-
-> 两个项目共享同一套碳排放因子引擎（湖北电网 OM 因子 0.4044 kgCO₂/kWh，MEE 2025），
-> 从不同维度覆盖"代码运行→机构运营"的完整碳足迹链路。
-
 ## 👤 关于作者
 
-**刘志明** · 武汉文理学院 · 红鸟挑战营第三期
+**刘志明** · 武汉文理学院
 
 - GitHub: [@liuzhiming12](https://github.com/liuzhiming12)
 - Email: liuzhiming_2005@qq.com

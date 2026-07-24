@@ -76,7 +76,7 @@ def load_from_database(db_path: str = "carbon_data.db") -> pd.DataFrame:
         if str(data[col].dtype).startswith('Large') or str(data[col].dtype) == 'string':
             data[col] = data[col].astype(object)
 
-    data['timestamp'] = pd.to_datetime(data['timestamp'])
+    data['timestamp'] = pd.to_datetime(data['timestamp'], format='mixed')
     # Fix: handle NaN before converting scope to int
     data['scope'] = data['scope'].fillna(0).astype(int)
     data['duration'] = data['duration'].astype(float)
